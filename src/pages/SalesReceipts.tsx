@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -131,13 +132,14 @@ const SalesReceipts = () => {
       pdf.text('USMAN HARDWARE', pageWidth / 2, yPos, { align: 'center' });
       yPos += 6;
       
+      
       pdf.setFontSize(8);
       pdf.setFont('helvetica', 'normal');
       pdf.text('Furniture Hardware Specialist', pageWidth / 2, yPos, { align: 'center' });
       yPos += 4;
       pdf.text('Hafizabad, Punjab, Pakistan', pageWidth / 2, yPos, { align: 'center' });
       yPos += 4;
-      pdf.text('Phone: +92-300-1234567', pageWidth / 2, yPos, { align: 'center' });
+      pdf.text('Phone: +92-322-6506118', pageWidth / 2, yPos, { align: 'center' });
       yPos += 8;
 
       // Separator line
@@ -536,10 +538,14 @@ const ReceiptDetails = ({ receipt }: { receipt: SalesReceipt }) => (
               <span>Rs. {receipt.tax.toLocaleString()}</span>
             </div>
           )}
-          <div className="flex justify-between font-bold text-lg pt-2 border-t">
-            <span>Total:</span>
-            <span className="text-green-600">Rs. {receipt.total.toLocaleString()}</span>
-          </div>
+        </div>
+      </div>
+
+      {/* FIXED: Total section with proper full-width alignment */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
+        <div className="flex justify-between items-center">
+          <span className="text-lg font-bold">TOTAL:</span>
+          <span className="text-xl font-bold">Rs. {receipt.total.toLocaleString()}</span>
         </div>
       </div>
 

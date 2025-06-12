@@ -1,7 +1,58 @@
-
 const BASE_URL = 'https://zaidawn.site/wp-json/ims/v1';
 
-// Finance API response types
+// API response types
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+// Customer balance update types
+export interface CustomerBalanceUpdate {
+  customerId: number;
+  orderId: number;
+  amount: number;
+  type: 'credit' | 'debit';
+  orderNumber: string;
+  description: string;
+}
+
+export interface CustomerBalance {
+  customerId: number;
+  currentBalance: number;
+  totalPurchases: number;
+  creditLimit: number;
+}
+
+// Accounts Receivable types
+export interface AccountsReceivable {
+  id: number;
+  customerName: string;
+  customerId: number;
+  orderNumber: string;
+  invoiceNumber: string;
+  amount: number;
+  balance: number;
+  paidAmount: number;
+  dueDate: string;
+  daysOverdue: number;
+  status: 'pending' | 'overdue' | 'paid';
+}
+
+// Expense types
+export interface Expense {
+  id: number;
+  category: string;
+  description: string;
+  amount: number;
+  date: string;
+  reference: string;
+  paymentMethod: 'cash' | 'bank_transfer' | 'cheque' | 'credit_card';
+  createdBy: string;
+  createdAt: string;
+}
+
+// Finance Overview types
 export interface FinanceOverview {
   revenue: {
     total: number;
@@ -16,51 +67,14 @@ export interface FinanceOverview {
     growth: number;
   };
   profit: {
-    gross: number;
     net: number;
     margin: number;
   };
-  accountsReceivable: number;
-  accountsPayable: number;
   cashFlow: {
     inflow: number;
     outflow: number;
     net: number;
   };
-}
-
-export interface AccountsReceivable {
-  id: number;
-  customerId: number;
-  customerName: string;
-  invoiceNumber: string;
-  date: string;
-  dueDate: string;
-  amount: number;
-  paidAmount: number;
-  balance: number;
-  daysOverdue: number;
-  status: string;
-}
-
-export interface Expense {
-  id: number;
-  category: string;
-  description: string;
-  amount: number;
-  date: string;
-  reference: string;
-  paymentMethod: string;
-  receipt?: string;
-  createdBy: string;
-}
-
-export interface PaymentRequest {
-  customerId: number;
-  amount: number;
-  paymentMethod: 'cash' | 'bank_transfer' | 'cheque';
-  reference: string;
-  notes?: string;
 }
 
 // Generic API request function
@@ -91,16 +105,38 @@ const apiRequest = async <T>(
   }
 };
 
+// Finance API endpoints
 export const financeApi = {
-  getOverview: (period: 'today' | 'week' | 'month' | 'year' = 'month') => {
-    return apiRequest<{ success: boolean; data: FinanceOverview }>(`/finance/overview?period=${period}`);
+  // Customer balance methods
+  updateCustomerBalance: (update: CustomerBalanceUpdate) => {
+    console.log('Sending customer balance update:', update);
+    return apiRequest<ApiResponse<CustomerBalance>>('/customers/update-balance', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...update,
+        amount: update.amount
+      }),
+    });
   },
 
+  getCustomerBalance: (customerId: number) =>
+    apiRequest<ApiResponse<CustomerBalance>>(`/customers/${customerId}/balance`),
+
+  syncCustomerBalances: () =>
+    apiRequest<ApiResponse<{ updated: number }>>('/customers/sync-balances', {
+      method: 'POST',
+    }),
+
+  // Finance overview methods
+  getOverview: (period?: string) =>
+    apiRequest<ApiResponse<FinanceOverview>>(`/finance/overview${period ? `?period=${period}` : ''}`),
+
+  // Accounts receivable methods
   getAccountsReceivable: (params?: {
-    page?: number;
+    status?: 'pending' | 'overdue' | 'paid';
+    customerId?: number;
     limit?: number;
     overdue?: boolean;
-    customerId?: number;
   }) => {
     const queryParams = new URLSearchParams();
     if (params) {
@@ -109,25 +145,34 @@ export const financeApi = {
       });
     }
     const query = queryParams.toString();
-    return apiRequest<{
-      success: boolean;
-      data: {
-        receivables: AccountsReceivable[];
-        summary: {
-          totalReceivables: number;
-          overdueAmount: number;
-          overdueCount: number;
-        };
+    return apiRequest<ApiResponse<{ 
+      receivables: AccountsReceivable[];
+      summary: {
+        totalReceivables: number;
+        overdueAmount: number;
+        overdueCount: number;
       };
-    }>(`/finance/accounts-receivable${query ? `?${query}` : ''}`);
+    }>>(`/finance/accounts-receivable${query ? `?${query}` : ''}`);
   },
 
+  recordPayment: (payment: {
+    customerId: number;
+    amount: number;
+    paymentMethod: string;
+    reference?: string;
+    notes?: string;
+  }) =>
+    apiRequest<ApiResponse<any>>('/finance/record-payment', {
+      method: 'POST',
+      body: JSON.stringify(payment),
+    }),
+
+  // Expense methods
   getExpenses: (params?: {
-    page?: number;
-    limit?: number;
     category?: string;
     dateFrom?: string;
     dateTo?: string;
+    limit?: number;
   }) => {
     const queryParams = new URLSearchParams();
     if (params) {
@@ -136,29 +181,25 @@ export const financeApi = {
       });
     }
     const query = queryParams.toString();
-    return apiRequest<{
-      success: boolean;
-      data: {
-        expenses: Expense[];
-        summary: {
-          totalExpenses: number;
-          categories: Array<{ category: string; amount: number }>;
-        };
+    return apiRequest<ApiResponse<{ 
+      expenses: Expense[];
+      summary: {
+        totalExpenses: number;
+        categories: Array<{ category: string; amount: number }>;
       };
-    }>(`/finance/expenses${query ? `?${query}` : ''}`);
+    }>>(`/finance/expenses${query ? `?${query}` : ''}`);
   },
 
-  recordPayment: (payment: PaymentRequest) => {
-    return apiRequest<{
-      success: boolean;
-      data: {
-        payment: any;
-        updatedBalance: number;
-      };
-      message: string;
-    }>('/finance/payments', {
+  createExpense: (expense: {
+    category: string;
+    description: string;
+    amount: number;
+    date: string;
+    paymentMethod: string;
+    reference?: string;
+  }) =>
+    apiRequest<ApiResponse<Expense>>('/finance/expenses', {
       method: 'POST',
-      body: JSON.stringify(payment),
-    });
-  },
+      body: JSON.stringify(expense),
+    }),
 };

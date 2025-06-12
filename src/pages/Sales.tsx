@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Package, Search, Plus, Minus, Pin, PinOff, Filter, Menu, X, AlertTriangle } from "lucide-react";
+import { Package, Search, Plus, Minus, Pin, PinOff, Filter, Menu, X, AlertTriangle, Maximize, Minimize } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { salesApi, customersApi, productsApi } from "@/services/api";
 import { QuickCustomerForm } from "@/components/QuickCustomerForm";
@@ -48,6 +48,41 @@ const Sales = () => {
   const [quantityInputs, setQuantityInputs] = useState<{[key: number]: string}>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Fullscreen toggle function
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch((err) => {
+        console.error('Error attempting to enable fullscreen:', err);
+        toast({
+          title: "Fullscreen Error",
+          description: "Could not enter fullscreen mode",
+          variant: "destructive"
+        });
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      }).catch((err) => {
+        console.error('Error attempting to exit fullscreen:', err);
+      });
+    }
+  };
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   useEffect(() => {
     fetchProducts();
@@ -409,6 +444,7 @@ const Sales = () => {
       pdf.setTextColor(0, 0, 0);
       pdf.setFillColor(248, 250, 252);
       pdf.roundedRect(6, yPos, pageWidth - 12, 10, 1, 1, 'F');
+      
       pdf.setDrawColor(26, 54, 93);
       pdf.setLineWidth(0.3);
       pdf.roundedRect(6, yPos, pageWidth - 12, 10, 1, 1, 'S');
@@ -743,6 +779,22 @@ const Sales = () => {
               <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full hidden md:inline">
                 {totalCartItems} items - PKR {totalCartValue.toLocaleString()}
               </span>
+              
+              {/* Fullscreen Toggle Button */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={toggleFullscreen}
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              >
+                {isFullscreen ? (
+                  <Minimize className="h-4 w-4" />
+                ) : (
+                  <Maximize className="h-4 w-4" />
+                )}
+              </Button>
+              
               <Button 
                 size="sm" 
                 className="bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm h-8 md:h-9 px-2 md:px-3"

@@ -19,7 +19,6 @@ import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 import Suppliers from "./pages/Suppliers";
 import PurchaseOrders from "./pages/PurchaseOrders";
-import SalesReceipts from "./pages/SalesReceipts";
 import Quotations from "./pages/Quotations";
 import ExpenseTracking from "./pages/ExpenseTracking";
 import SalesAnalytics from "./pages/SalesAnalytics";
@@ -54,7 +53,6 @@ const App = () => (
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/suppliers" element={<Suppliers />} />
                     <Route path="/purchase-orders" element={<PurchaseOrders />} />
-                    <Route path="/sales-receipts" element={<SalesReceipts />} />
                     <Route path="/quotations" element={<Quotations />} />
                     <Route path="/expense-tracking" element={<ExpenseTracking />} />
                     <Route path="/sales-analytics" element={<SalesAnalytics />} />

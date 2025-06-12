@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +30,6 @@ import {
   CreditCard,
   UserCheck,
   Database,
-  Receipt,
   PieChart,
   ShoppingBag
 } from "lucide-react"
@@ -82,7 +80,7 @@ const mainItems: MenuItem[] = [
   },
 ]
 
-// Business Operations
+// Business Operations - removed Sales Receipts
 const businessItems: MenuItem[] = [
   {
     title: "Suppliers",
@@ -93,11 +91,6 @@ const businessItems: MenuItem[] = [
     title: "Purchase Orders",
     url: "/purchase-orders",
     icon: FileText,
-  },
-  {
-    title: "Sales Receipts",
-    url: "/sales-receipts", 
-    icon: Receipt,
   },
   {
     title: "Quotations",
