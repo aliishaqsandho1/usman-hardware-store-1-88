@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -6,7 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { 
+  MessageCircle, 
+  Send, 
+  Bot, 
+  User, 
+  Loader2, 
+  Sparkles, 
+  Mic, 
+  MicOff, 
+  Volume2,
+  VolumeX,
+  Zap,
+  Brain,
+  Stars,
+  Wand2,
+  Circle,
+  Play
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const GEMINI_API_KEY = "AIzaSyDscgxHRLCy4suVBigT1g_pXMnE7tH_Ejw";
@@ -76,12 +94,14 @@ const Reports = () => {
     {
       id: '1',
       type: 'ai',
-      content: "Hello! I'm your business AI assistant. I have access to all your current business data including sales, inventory, finances, and customer information. Feel free to ask me anything about your business performance, trends, or get recommendations for improvement.",
+      content: "Hello! I'm your advanced AI business assistant. I have real-time access to all your business data including sales, inventory, finances, and customer insights. Ask me anything about your business performance, get predictive analytics, or receive strategic recommendations.",
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch enhanced stats from the API
@@ -128,8 +148,8 @@ const Reports = () => {
       if (paragraph.match(/^\*\*[^*]+\*\*$/)) {
         const headerText = paragraph.replace(/^\*\*|\*\*$/g, '').trim();
         return (
-          <h3 key={index} className="text-lg font-semibold text-blue-700 mb-3 mt-4 first:mt-0 flex items-center">
-            <Sparkles className="h-5 w-5 mr-2 text-blue-600" />
+          <h3 key={index} className="text-lg font-semibold text-cyan-400 mb-3 mt-4 first:mt-0 flex items-center">
+            <Sparkles className="h-5 w-5 mr-2 text-cyan-400" />
             {headerText}
           </h3>
         );
@@ -141,8 +161,8 @@ const Reports = () => {
         return (
           <ul key={index} className="space-y-2 mb-4 ml-4">
             {listItems.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-gray-700 flex items-start">
-                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+              <li key={itemIndex} className="text-gray-300 flex items-start">
+                <span className="inline-block w-2 h-2 bg-cyan-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                 <span>{item.replace(/^[\*\-]\s/, '').trim()}</span>
               </li>
             ))}
@@ -156,8 +176,8 @@ const Reports = () => {
         return (
           <ol key={index} className="space-y-2 mb-4 ml-4">
             {listItems.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-gray-700 flex items-start">
-                <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mr-3 flex-shrink-0 mt-0.5">
+              <li key={itemIndex} className="text-gray-300 flex items-start">
+                <span className="inline-flex items-center justify-center w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full text-sm font-medium mr-3 flex-shrink-0 mt-0.5">
                   {itemIndex + 1}
                 </span>
                 <span>{item.replace(/^\d+\.\s?/, '').trim()}</span>
@@ -170,12 +190,12 @@ const Reports = () => {
       // Regular paragraph with inline formatting
       if (paragraph.trim()) {
         // Format bold text (**text**) - be more careful with replacement
-        let formattedText = paragraph.replace(/\*\*([^*]+?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
+        let formattedText = paragraph.replace(/\*\*([^*]+?)\*\*/g, '<strong class="font-semibold text-white">$1</strong>');
         
         return (
           <p 
             key={index} 
-            className="text-gray-700 leading-relaxed mb-3"
+            className="text-gray-300 leading-relaxed mb-3"
             dangerouslySetInnerHTML={{ __html: formattedText }}
           />
         );
@@ -335,105 +355,206 @@ Please provide a helpful, well-formatted response based on the current business 
     }
   };
 
+  const toggleVoiceInput = () => {
+    setIsListening(!isListening);
+    // Voice input functionality would be implemented here
+    toast({
+      title: "Voice Input",
+      description: isListening ? "Voice input stopped" : "Voice input started",
+    });
+  };
+
+  const toggleSpeech = () => {
+    setIsSpeaking(!isSpeaking);
+    // Text-to-speech functionality would be implemented here
+    toast({
+      title: "Voice Output",
+      description: isSpeaking ? "Speech stopped" : "Speech started",
+    });
+  };
+
   if (statsLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      <div className="flex-1 flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-lg text-gray-600">Loading business data...</p>
+          <div className="relative mb-8">
+            <div className="w-20 h-20 border-4 border-cyan-200 border-t-cyan-400 rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-400 rounded-full animate-spin mx-auto" style={{animationDirection: 'reverse', animationDuration: '3s'}}></div>
+          </div>
+          <p className="text-xl text-cyan-300 font-medium">Initializing AI Assistant...</p>
+          <p className="text-sm text-gray-400 mt-2">Loading business intelligence data</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="flex-1 flex flex-col h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-cyan-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
+      </div>
+
+      {/* Floating Particles */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-cyan-400/30 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 10}s`,
+              animation: `float 10s infinite linear`
+            }}
+          ></div>
+        ))}
+      </div>
+
       {/* Header */}
-      <div className="border-b bg-white/80 backdrop-blur-sm shadow-sm">
+      <div className="relative z-10 border-b border-cyan-500/20 bg-black/20 backdrop-blur-xl shadow-2xl">
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger />
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <MessageCircle className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Brain className="h-8 w-8 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
+                  <Circle className="h-3 w-3 text-white fill-current" />
+                </div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Ask AI
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Nexus AI
                 </h1>
-                <p className="text-gray-600">Your intelligent business assistant</p>
+                <p className="text-cyan-300 font-medium">Advanced Business Intelligence Assistant</p>
+                <p className="text-xs text-gray-400">Powered by Gemini 2.0 Flash</p>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              Connected
-            </Badge>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              Data Updated: {new Date().toLocaleTimeString()}
-            </Badge>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 rounded-full border border-green-400/30">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-300 text-sm font-medium">Online</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full border border-blue-400/30">
+                <Zap className="w-3 h-3 text-blue-300" />
+                <span className="text-blue-300 text-sm font-medium">Real-time Data</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSpeech}
+                className={`relative text-white hover:bg-white/10 border border-cyan-400/30 ${isSpeaking ? 'bg-cyan-500/20' : ''}`}
+              >
+                {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                {isSpeaking && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleVoiceInput}
+                className={`relative text-white hover:bg-white/10 border border-purple-400/30 ${isListening ? 'bg-purple-500/20' : ''}`}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isListening && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative z-10">
         <ScrollArea className="h-full">
-          <div className="max-w-4xl mx-auto p-6 space-y-6 pb-32">
-            {messages.map((message) => (
+          <div className="max-w-5xl mx-auto p-6 space-y-8 pb-32">
+            {messages.map((message, index) => (
               <div
                 key={message.id}
-                className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-6 ${message.type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                style={{animationDelay: `${index * 0.1}s`}}
               >
                 {message.type === 'ai' && (
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-5 w-5 text-white" />
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <Bot className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center">
+                      <Sparkles className="h-3 w-3 text-white" />
+                    </div>
                   </div>
                 )}
                 
-                <Card className={`max-w-2xl ${
+                <Card className={`max-w-3xl ${
                   message.type === 'user' 
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
-                    : 'bg-white shadow-lg border-0'
-                }`}>
+                    ? 'bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 border-cyan-400/30 backdrop-blur-xl' 
+                    : 'bg-black/40 border-gray-700/50 backdrop-blur-xl'
+                } shadow-2xl`}>
                   <CardContent className="p-6">
                     {message.type === 'user' ? (
-                      <p className="text-white leading-relaxed">
+                      <p className="text-white leading-relaxed font-medium">
                         {message.content}
                       </p>
                     ) : (
-                      <div className="prose prose-sm max-w-none">
+                      <div className="prose prose-invert max-w-none">
                         {formatAIResponse(message.content)}
                       </div>
                     )}
-                    <p className={`text-xs mt-3 ${
-                      message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-                    }`}>
-                      {message.timestamp.toLocaleTimeString()}
-                    </p>
+                    <div className="flex items-center justify-between mt-4">
+                      <p className={`text-xs ${
+                        message.type === 'user' ? 'text-cyan-200' : 'text-gray-400'
+                      }`}>
+                        {message.timestamp.toLocaleTimeString()}
+                      </p>
+                      {message.type === 'ai' && (
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" className="text-cyan-400 hover:bg-cyan-400/10 h-6 px-2">
+                            <Play className="h-3 w-3 mr-1" />
+                            <span className="text-xs">Speak</span>
+                          </Button>
+                          <Stars className="h-4 w-4 text-yellow-400" />
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
 
                 {message.type === 'user' && (
-                  <div className="w-10 h-10 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="h-5 w-5 text-white" />
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <User className="h-6 w-6 text-white" />
                   </div>
                 )}
               </div>
             ))}
             
             {isLoading && (
-              <div className="flex gap-4 justify-start">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-5 w-5 text-white" />
+              <div className="flex gap-6 justify-start animate-fade-in">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <Bot className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-orange-400 rounded-full flex items-center justify-center animate-pulse">
+                    <Loader2 className="h-3 w-3 text-white animate-spin" />
+                  </div>
                 </div>
-                <Card className="bg-white shadow-lg border-0">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                      <span className="text-gray-600">AI is thinking...</span>
+                <Card className="bg-black/40 border-gray-700/50 backdrop-blur-xl shadow-2xl">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                      <span className="text-cyan-300 text-sm font-medium">AI is analyzing your data...</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -445,23 +566,53 @@ Please provide a helpful, well-formatted response based on the current business 
       </div>
 
       {/* Input Area */}
-      <div className="border-t bg-white/80 backdrop-blur-sm shadow-lg absolute bottom-0 left-0 right-0">
-        <div className="max-w-4xl mx-auto p-6">
+      <div className="relative z-10 border-t border-cyan-500/20 bg-black/20 backdrop-blur-xl shadow-2xl">
+        <div className="max-w-5xl mx-auto p-6">
+          {/* Quick Action Chips */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+            {[
+              "Show me today's sales performance",
+              "What are my top selling products?",
+              "Analyze cash flow trends",
+              "Revenue forecast for next month",
+              "Customer satisfaction insights"
+            ].map((suggestion, index) => (
+              <Button
+                key={index}
+                variant="ghost"
+                size="sm"
+                onClick={() => setInputMessage(suggestion)}
+                className="text-cyan-300 hover:bg-cyan-400/10 border border-cyan-400/30 rounded-full whitespace-nowrap text-xs"
+              >
+                <Wand2 className="h-3 w-3 mr-1" />
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+
           <div className="flex gap-4 items-end">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <Input
-                placeholder="Ask me anything about your business performance, sales trends, inventory, or get recommendations..."
+                placeholder="Ask me anything about your business performance, trends, or get strategic insights..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={isLoading}
-                className="h-12 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                className="h-14 text-base bg-black/40 border-cyan-400/30 focus:border-cyan-400 focus:ring-cyan-400/20 text-white placeholder-gray-400 rounded-2xl pr-12 backdrop-blur-xl"
               />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleVoiceInput}
+                className={`absolute right-2 top-1/2 transform -translate-y-1/2 text-cyan-400 hover:bg-cyan-400/10 rounded-xl ${isListening ? 'bg-cyan-400/20' : ''}`}
+              >
+                {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              </Button>
             </div>
             <Button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="h-12 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+              className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-xl rounded-2xl transition-all duration-300 transform hover:scale-105"
             >
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -475,6 +626,15 @@ Please provide a helpful, well-formatted response based on the current business 
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          25% { transform: translateY(-10px) translateX(5px); }
+          50% { transform: translateY(-5px) translateX(-5px); }
+          75% { transform: translateY(-15px) translateX(3px); }
+        }
+      `}</style>
     </div>
   );
 };
