@@ -161,8 +161,8 @@ export const generateReportPDF = (reportData: ReportData) => {
     });
   }
 
-  // Footer
-  const pageCount = doc.internal.getNumberOfPages();
+  // Footer - Fixed to use correct jsPDF API
+  const pageCount = (doc as any).internal.pages.length - 1; // Subtract 1 because pages array includes a null first element
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);

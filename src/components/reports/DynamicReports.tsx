@@ -174,7 +174,8 @@ const DynamicReports = () => {
       name: cat.category,
       value: Math.round((cat.revenue / total) * 100),
       revenue: cat.revenue,
-      color: COLORS[index % COLORS.length]
+      color: COLORS[index % COLORS.length],
+      percentage: Math.round((cat.revenue / total) * 100) // Add percentage property for PDF export
     }));
   };
 
@@ -188,6 +189,8 @@ const DynamicReports = () => {
       return;
     }
 
+    const categoryData = generateCategoryData();
+    
     const reportData = {
       title: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`,
       period: period.charAt(0).toUpperCase() + period.slice(1),
@@ -208,7 +211,11 @@ const DynamicReports = () => {
         avgCustomerValue: dashboardStats.customers.avgCustomerValue
       },
       cashFlow: generateCashFlowData(),
-      categoryData: generateCategoryData()
+      categoryData: categoryData.map(cat => ({
+        name: cat.name,
+        revenue: cat.revenue,
+        percentage: cat.percentage
+      }))
     };
 
     generateReportPDF(reportData);
