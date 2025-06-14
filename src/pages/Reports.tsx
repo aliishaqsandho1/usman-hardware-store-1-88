@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -102,6 +103,8 @@ const Reports = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
 
   // Fetch enhanced stats from the API
   const { data: enhancedStats, isLoading: statsLoading } = useQuery({
@@ -113,6 +116,57 @@ const Reports = () => {
     },
     refetchInterval: 5 * 60 * 1000,
   });
+
+  // Initialize speech recognition and synthesis
+  useEffect(() => {
+    // Initialize Speech Recognition
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onstart = () => {
+        console.log('Speech recognition started');
+      };
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log('Speech recognized:', transcript);
+        setInputMessage(transcript);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        toast({
+          title: "Voice Input Error",
+          description: "Could not capture voice input. Please try again.",
+          variant: "destructive",
+        });
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+
+    // Initialize Speech Synthesis
+    if ('speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis;
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (synthRef.current) {
+        synthRef.current.cancel();
+      }
+    };
+  }, [toast]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -355,21 +409,95 @@ Please provide a helpful, well-formatted response based on the current business 
   };
 
   const toggleVoiceInput = () => {
-    setIsListening(!isListening);
-    // Voice input functionality would be implemented here
-    toast({
-      title: "Voice Input",
-      description: isListening ? "Voice input stopped" : "Voice input started",
-    });
+    if (!recognitionRef.current) {
+      toast({
+        title: "Voice Input Not Supported",
+        description: "Your browser doesn't support voice input feature.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+      toast({
+        title: "Voice Input",
+        description: "Listening... Speak now!",
+      });
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (!synthRef.current) {
+      toast({
+        title: "Text-to-Speech Not Supported",
+        description: "Your browser doesn't support text-to-speech feature.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isSpeaking) {
+      synthRef.current.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Clean the text for speech
+    const cleanText = text.replace(/\*\*/g, '').replace(/\*/g, '').trim();
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 0.8;
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+    };
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      toast({
+        title: "Speech Error",
+        description: "Failed to speak the text. Please try again.",
+        variant: "destructive",
+      });
+    };
+
+    synthRef.current.speak(utterance);
   };
 
   const toggleSpeech = () => {
-    setIsSpeaking(!isSpeaking);
-    // Text-to-speech functionality would be implemented here
-    toast({
-      title: "Voice Output",
-      description: isSpeaking ? "Speech stopped" : "Speech started",
-    });
+    if (!synthRef.current) {
+      toast({
+        title: "Text-to-Speech Not Supported",
+        description: "Your browser doesn't support text-to-speech feature.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isSpeaking) {
+      synthRef.current.cancel();
+      setIsSpeaking(false);
+      toast({
+        title: "Voice Output",
+        description: "Speech stopped",
+      });
+    } else {
+      toast({
+        title: "Voice Output",
+        description: "Click the speak button next to any AI message to hear it",
+      });
+    }
   };
 
   if (statsLoading) {
@@ -515,9 +643,15 @@ Please provide a helpful, well-formatted response based on the current business 
                       </p>
                       {message.type === 'ai' && (
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" className="text-cyan-400 hover:bg-cyan-400/10 h-6 px-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-cyan-400 hover:bg-cyan-400/10 h-6 px-2"
+                            onClick={() => speakText(message.content)}
+                            disabled={isSpeaking}
+                          >
                             <Play className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Speak</span>
+                            <span className="text-xs">{isSpeaking ? 'Speaking...' : 'Speak'}</span>
                           </Button>
                           <Stars className="h-4 w-4 text-yellow-400" />
                         </div>
@@ -624,15 +758,6 @@ Please provide a helpful, well-formatted response based on the current business 
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          25% { transform: translateY(-10px) translateX(5px); }
-          50% { transform: translateY(-5px) translateX(-5px); }
-          75% { transform: translateY(-15px) translateX(3px); }
-        }
-      `}</style>
     </div>
   );
 };
