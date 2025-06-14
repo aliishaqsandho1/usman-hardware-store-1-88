@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -402,12 +401,11 @@ Please provide a helpful, well-formatted response based on the current business 
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-cyan-400/30 rounded-full"
+            className="absolute w-1 h-1 bg-cyan-400/30 rounded-full animate-float"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animation: `float 10s infinite linear`
+              animationDelay: `${Math.random() * 10}s`
             }}
           ></div>
         ))}
