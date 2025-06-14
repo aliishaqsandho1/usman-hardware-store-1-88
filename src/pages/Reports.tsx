@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -94,7 +93,7 @@ const Reports = () => {
     {
       id: '1',
       type: 'ai',
-      content: "Hello! I'm your advanced AI business assistant. I have real-time access to all your business data including sales, inventory, finances, and customer insights. Ask me anything about your business performance, get predictive analytics, or receive strategic recommendations.",
+      content: "Hello! I'm your AI business assistant with real-time access to your sales, inventory, finances, and customer data. Ask me anything about your business performance or get strategic recommendations.",
       timestamp: new Date()
     }
   ]);
@@ -201,8 +200,8 @@ const Reports = () => {
       if (paragraph.match(/^\*\*[^*]+\*\*$/)) {
         const headerText = paragraph.replace(/^\*\*|\*\*$/g, '').trim();
         return (
-          <h3 key={index} className="text-lg font-semibold text-cyan-400 mb-3 mt-4 first:mt-0 flex items-center">
-            <Sparkles className="h-5 w-5 mr-2 text-cyan-400" />
+          <h3 key={index} className="text-sm font-semibold text-primary mb-2 mt-3 first:mt-0 flex items-center">
+            <Sparkles className="h-3 w-3 mr-2 text-primary" />
             {headerText}
           </h3>
         );
@@ -212,10 +211,10 @@ const Reports = () => {
       if (paragraph.match(/^[\*\-]\s/)) {
         const listItems = paragraph.split('\n').filter(item => item.trim());
         return (
-          <ul key={index} className="space-y-2 mb-4 ml-4">
+          <ul key={index} className="space-y-1 mb-3 ml-3">
             {listItems.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-gray-300 flex items-start">
-                <span className="inline-block w-2 h-2 bg-cyan-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+              <li key={itemIndex} className="text-muted-foreground text-xs flex items-start">
+                <span className="inline-block w-1.5 h-1.5 bg-primary rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
                 <span>{item.replace(/^[\*\-]\s/, '').trim()}</span>
               </li>
             ))}
@@ -227,10 +226,10 @@ const Reports = () => {
       if (paragraph.match(/^\d+\./)) {
         const listItems = paragraph.split('\n').filter(item => item.trim());
         return (
-          <ol key={index} className="space-y-2 mb-4 ml-4">
+          <ol key={index} className="space-y-1 mb-3 ml-3">
             {listItems.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-gray-300 flex items-start">
-                <span className="inline-flex items-center justify-center w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full text-sm font-medium mr-3 flex-shrink-0 mt-0.5">
+              <li key={itemIndex} className="text-muted-foreground text-xs flex items-start">
+                <span className="inline-flex items-center justify-center w-4 h-4 bg-primary text-primary-foreground rounded-full text-xs font-medium mr-2 flex-shrink-0 mt-0.5">
                   {itemIndex + 1}
                 </span>
                 <span>{item.replace(/^\d+\.\s?/, '').trim()}</span>
@@ -243,12 +242,12 @@ const Reports = () => {
       // Regular paragraph with inline formatting
       if (paragraph.trim()) {
         // Format bold text (**text**) - be more careful with replacement
-        let formattedText = paragraph.replace(/\*\*([^*]+?)\*\*/g, '<strong class="font-semibold text-white">$1</strong>');
+        let formattedText = paragraph.replace(/\*\*([^*]+?)\*\*/g, '<strong class="font-medium text-foreground">$1</strong>');
         
         return (
           <p 
             key={index} 
-            className="text-gray-300 leading-relaxed mb-3"
+            className="text-muted-foreground text-xs leading-relaxed mb-2"
             dangerouslySetInnerHTML={{ __html: formattedText }}
           />
         );
@@ -502,97 +501,69 @@ Please provide a helpful, well-formatted response based on the current business 
 
   if (statsLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="flex-1 flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <div className="relative mb-8">
-            <div className="w-20 h-20 border-4 border-cyan-200 border-t-cyan-400 rounded-full animate-spin mx-auto"></div>
-            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-400 rounded-full animate-spin mx-auto" style={{animationDirection: 'reverse', animationDuration: '3s'}}></div>
+          <div className="relative mb-6">
+            <div className="w-12 h-12 border-2 border-muted border-t-primary rounded-full animate-spin mx-auto"></div>
           </div>
-          <p className="text-xl text-cyan-300 font-medium">Initializing AI Assistant...</p>
-          <p className="text-sm text-gray-400 mt-2">Loading business intelligence data</p>
+          <p className="text-lg text-foreground font-medium">Initializing AI Assistant...</p>
+          <p className="text-xs text-muted-foreground mt-1">Loading business intelligence data</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-cyan-400/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
-      </div>
-
-      {/* Floating Particles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-cyan-400/30 rounded-full animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`
-            }}
-          ></div>
-        ))}
-      </div>
-
+    <div className="flex-1 flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="relative z-10 border-b border-cyan-500/20 bg-black/20 backdrop-blur-xl shadow-2xl">
-        <div className="flex items-center justify-between p-6">
-          <div className="flex items-center gap-4">
+      <div className="border-b bg-card shadow-sm">
+        <div className="flex items-center justify-between p-3">
+          <div className="flex items-center gap-3">
             <SidebarTrigger />
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Brain className="h-8 w-8 text-white" />
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                  <Brain className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
-                  <Circle className="h-3 w-3 text-white fill-current" />
+                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                  <Circle className="h-2 w-2 text-white fill-current" />
                 </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Nexus AI
-                </h1>
-                <p className="text-cyan-300 font-medium">Advanced Business Intelligence Assistant</p>
-                <p className="text-xs text-gray-400">Powered by Gemini 2.0 Flash</p>
+                <h1 className="text-xl font-bold text-foreground">Nexus AI</h1>
+                <p className="text-xs text-muted-foreground">Business Intelligence Assistant</p>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 rounded-full border border-green-400/30">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-green-300 text-sm font-medium">Online</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full border border-blue-400/30">
-                <Zap className="w-3 h-3 text-blue-300" />
-                <span className="text-blue-300 text-sm font-medium">Real-time Data</span>
-              </div>
+              <Badge variant="secondary" className="h-6 text-xs">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div>
+                Online
+              </Badge>
+              <Badge variant="secondary" className="h-6 text-xs">
+                <Zap className="w-3 h-3 mr-1" />
+                Real-time
+              </Badge>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleSpeech}
-                className={`relative text-white hover:bg-white/10 border border-cyan-400/30 ${isSpeaking ? 'bg-cyan-500/20' : ''}`}
+                className={`h-7 w-7 p-0 ${isSpeaking ? 'bg-secondary' : ''}`}
               >
-                {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                {isSpeaking && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>}
+                {isSpeaking ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleVoiceInput}
-                className={`relative text-white hover:bg-white/10 border border-purple-400/30 ${isListening ? 'bg-purple-500/20' : ''}`}
+                className={`h-7 w-7 p-0 ${isListening ? 'bg-secondary' : ''}`}
               >
-                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                {isListening && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>}
+                {isListening ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
               </Button>
             </div>
           </div>
@@ -600,93 +571,79 @@ Please provide a helpful, well-formatted response based on the current business 
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-hidden relative z-10">
+      <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="max-w-5xl mx-auto p-6 space-y-8 pb-32">
+          <div className="max-w-4xl mx-auto p-4 space-y-4 pb-20">
             {messages.map((message, index) => (
               <div
                 key={message.id}
-                className={`flex gap-6 ${message.type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
-                style={{animationDelay: `${index * 0.1}s`}}
+                className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.type === 'ai' && (
                   <div className="relative">
-                    <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                      <Bot className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center">
-                      <Sparkles className="h-3 w-3 text-white" />
+                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Bot className="h-4 w-4 text-primary-foreground" />
                     </div>
                   </div>
                 )}
                 
-                <Card className={`max-w-3xl ${
+                <Card className={`max-w-2xl ${
                   message.type === 'user' 
-                    ? 'bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 border-cyan-400/30 backdrop-blur-xl' 
-                    : 'bg-black/40 border-gray-700/50 backdrop-blur-xl'
-                } shadow-2xl`}>
-                  <CardContent className="p-6">
+                    ? 'bg-primary/10 border-primary/20' 
+                    : 'bg-card border-border'
+                }`}>
+                  <CardContent className="p-3">
                     {message.type === 'user' ? (
-                      <p className="text-white leading-relaxed font-medium">
+                      <p className="text-foreground text-sm leading-relaxed">
                         {message.content}
                       </p>
                     ) : (
-                      <div className="prose prose-invert max-w-none">
+                      <div className="prose prose-sm max-w-none">
                         {formatAIResponse(message.content)}
                       </div>
                     )}
-                    <div className="flex items-center justify-between mt-4">
-                      <p className={`text-xs ${
-                        message.type === 'user' ? 'text-cyan-200' : 'text-gray-400'
-                      }`}>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-muted-foreground">
                         {message.timestamp.toLocaleTimeString()}
                       </p>
                       {message.type === 'ai' && (
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-cyan-400 hover:bg-cyan-400/10 h-6 px-2"
-                            onClick={() => speakText(message.content)}
-                            disabled={isSpeaking}
-                          >
-                            <Play className="h-3 w-3 mr-1" />
-                            <span className="text-xs">{isSpeaking ? 'Speaking...' : 'Speak'}</span>
-                          </Button>
-                          <Stars className="h-4 w-4 text-yellow-400" />
-                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 text-xs"
+                          onClick={() => speakText(message.content)}
+                          disabled={isSpeaking}
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          {isSpeaking ? 'Speaking...' : 'Speak'}
+                        </Button>
                       )}
                     </div>
                   </CardContent>
                 </Card>
 
                 {message.type === 'user' && (
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <User className="h-6 w-6 text-white" />
+                  <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4 text-secondary-foreground" />
                   </div>
                 )}
               </div>
             ))}
             
             {isLoading && (
-              <div className="flex gap-6 justify-start animate-fade-in">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <Bot className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-orange-400 rounded-full flex items-center justify-center animate-pulse">
-                    <Loader2 className="h-3 w-3 text-white animate-spin" />
-                  </div>
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <Card className="bg-black/40 border-gray-700/50 backdrop-blur-xl shadow-2xl">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3">
+                <Card className="bg-card border-border">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
-                      <span className="text-cyan-300 text-sm font-medium">AI is analyzing your data...</span>
+                      <span className="text-muted-foreground text-xs">AI is analyzing...</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -698,59 +655,60 @@ Please provide a helpful, well-formatted response based on the current business 
       </div>
 
       {/* Input Area */}
-      <div className="relative z-10 border-t border-cyan-500/20 bg-black/20 backdrop-blur-xl shadow-2xl">
-        <div className="max-w-5xl mx-auto p-6">
-          {/* Quick Action Chips */}
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-            {[
-              "Show me today's sales performance",
-              "What are my top selling products?",
-              "Analyze cash flow trends",
-              "Revenue forecast for next month",
-              "Customer satisfaction insights"
-            ].map((suggestion, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                size="sm"
-                onClick={() => setInputMessage(suggestion)}
-                className="text-cyan-300 hover:bg-cyan-400/10 border border-cyan-400/30 rounded-full whitespace-nowrap text-xs"
-              >
-                <Wand2 className="h-3 w-3 mr-1" />
-                {suggestion}
-              </Button>
-            ))}
-          </div>
+      <div className="border-t bg-card shadow-sm">
+        <div className="max-w-4xl mx-auto p-4">
+          {/* Quick Action Chips - Only show if less than 3 messages */}
+          {messages.length <= 2 && (
+            <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
+              {[
+                "Show today's sales performance",
+                "Top selling products?",
+                "Cash flow analysis",
+                "Revenue forecast"
+              ].map((suggestion, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInputMessage(suggestion)}
+                  className="text-xs whitespace-nowrap h-7 px-3"
+                >
+                  <Wand2 className="h-3 w-3 mr-1" />
+                  {suggestion}
+                </Button>
+              ))}
+            </div>
+          )}
 
-          <div className="flex gap-4 items-end">
+          <div className="flex gap-3 items-end">
             <div className="flex-1 relative">
               <Input
-                placeholder="Ask me anything about your business performance, trends, or get strategic insights..."
+                placeholder="Ask about your business performance, trends, or get strategic insights..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={isLoading}
-                className="h-14 text-base bg-black/40 border-cyan-400/30 focus:border-cyan-400 focus:ring-cyan-400/20 text-white placeholder-gray-400 rounded-2xl pr-12 backdrop-blur-xl"
+                className="h-10 text-sm pr-10"
               />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleVoiceInput}
-                className={`absolute right-2 top-1/2 transform -translate-y-1/2 text-cyan-400 hover:bg-cyan-400/10 rounded-xl ${isListening ? 'bg-cyan-400/20' : ''}`}
+                className={`absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 ${isListening ? 'bg-secondary' : ''}`}
               >
-                {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                {isListening ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
               </Button>
             </div>
             <Button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-xl rounded-2xl transition-all duration-300 transform hover:scale-105"
+              className="h-10 px-4"
             >
               {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <Send className="h-5 w-5 mr-2" />
+                  <Send className="h-4 w-4 mr-2" />
                   Send
                 </>
               )}
