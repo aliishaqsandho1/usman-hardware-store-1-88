@@ -244,7 +244,16 @@ export default function ExpenseTracking() {
     })
     .reduce((sum, expense) => sum + expense.amount, 0);
 
-  const getPaymentMethodBadge = (method: string) => {
+  const getPaymentMethodBadge = (method: string | undefined | null) => {
+    // Handle undefined, null, or empty method
+    if (!method) {
+      return (
+        <Badge className="bg-gray-100 text-gray-800 border border-gray-200">
+          Unknown
+        </Badge>
+      );
+    }
+
     const colors = {
       cash: 'bg-green-100 text-green-800 border-green-200',
       bank_transfer: 'bg-blue-100 text-blue-800 border-blue-200',
