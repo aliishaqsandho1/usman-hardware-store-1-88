@@ -113,6 +113,67 @@ const Reports = () => {
     }).format(amount);
   };
 
+  const formatAIResponse = (text: string) => {
+    // Split text into paragraphs
+    const paragraphs = text.split('\n\n');
+    
+    return paragraphs.map((paragraph, index) => {
+      // Check if it's a header (starts with ** or ##)
+      if (paragraph.match(/^(\*\*|##).*/)) {
+        const headerText = paragraph.replace(/^\*\*|##|\*\*$/g, '').trim();
+        return (
+          <h3 key={index} className="text-lg font-semibold text-blue-700 mb-3 mt-4 first:mt-0">
+            {headerText}
+          </h3>
+        );
+      }
+      
+      // Check if it's a list item (starts with * or -)
+      if (paragraph.match(/^[\*\-]\s/)) {
+        const listItems = paragraph.split('\n').filter(item => item.trim());
+        return (
+          <ul key={index} className="list-disc list-inside space-y-2 mb-4 ml-4">
+            {listItems.map((item, itemIndex) => (
+              <li key={itemIndex} className="text-gray-700">
+                {item.replace(/^[\*\-]\s/, '').trim()}
+              </li>
+            ))}
+          </ul>
+        );
+      }
+      
+      // Check if it's a numbered list
+      if (paragraph.match(/^\d+\./)) {
+        const listItems = paragraph.split('\n').filter(item => item.trim());
+        return (
+          <ol key={index} className="list-decimal list-inside space-y-2 mb-4 ml-4">
+            {listItems.map((item, itemIndex) => (
+              <li key={itemIndex} className="text-gray-700">
+                {item.replace(/^\d+\.\s?/, '').trim()}
+              </li>
+            ))}
+          </ol>
+        );
+      }
+      
+      // Regular paragraph
+      if (paragraph.trim()) {
+        // Format bold text (**text**)
+        const formattedText = paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        return (
+          <p 
+            key={index} 
+            className="text-gray-700 leading-relaxed mb-3"
+            dangerouslySetInnerHTML={{ __html: formattedText }}
+          />
+        );
+      }
+      
+      return null;
+    }).filter(Boolean);
+  };
+
   const generateBusinessContext = (businessData: EnhancedStats) => {
     const currentDate = new Date().toLocaleDateString();
     
@@ -157,7 +218,15 @@ ${businessData.alerts?.map(alert => `- ${alert.title}: ${alert.message}`).join('
 
 BUSINESS TYPE: This appears to be a manufacturing/trading business dealing with wood products, sheets, and building materials based on the product names (MDF, HDX, KMI, ZRK series products).
 
-Please provide helpful, actionable insights and recommendations based on this current business data. Keep responses conversational and easy to understand for business owners. Use Pakistani Rupees (PKR) for all currency references.
+RESPONSE FORMAT REQUIREMENTS:
+- Please format your response using proper headings with ** for main sections
+- Use bullet points (*) for lists and recommendations
+- Use numbered lists (1., 2., 3.) for step-by-step instructions
+- Keep responses well-structured and easy to read
+- Use bold text (**text**) for important numbers or key points
+- Provide helpful, actionable insights and recommendations based on this current business data
+- Keep responses conversational and easy to understand for business owners
+- Use Pakistani Rupees (PKR) for all currency references
 `;
   };
 
@@ -172,7 +241,7 @@ Please provide helpful, actionable insights and recommendations based on this cu
 
 USER QUESTION: ${userMessage}
 
-Please provide a helpful, conversational response based on the current business data above. Be specific, actionable, and easy to understand. If the user is asking about trends, performance, or recommendations, use the actual numbers from the data. Keep your response friendly and professional.`;
+Please provide a helpful, well-formatted response based on the current business data above. Use the formatting guidelines specified in the context to make your response clear and professional.`;
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -318,13 +387,17 @@ Please provide a helpful, conversational response based on the current business 
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
                     : 'bg-white shadow-lg border-0'
                 }`}>
-                  <CardContent className="p-4">
-                    <p className={`text-sm leading-relaxed whitespace-pre-wrap ${
-                      message.type === 'user' ? 'text-white' : 'text-gray-800'
-                    }`}>
-                      {message.content}
-                    </p>
-                    <p className={`text-xs mt-2 ${
+                  <CardContent className="p-6">
+                    {message.type === 'user' ? (
+                      <p className="text-white leading-relaxed">
+                        {message.content}
+                      </p>
+                    ) : (
+                      <div className="prose prose-sm max-w-none">
+                        {formatAIResponse(message.content)}
+                      </div>
+                    )}
+                    <p className={`text-xs mt-3 ${
                       message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
                     }`}>
                       {message.timestamp.toLocaleTimeString()}
