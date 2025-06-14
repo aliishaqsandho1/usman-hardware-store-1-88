@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -114,15 +113,23 @@ const Reports = () => {
   };
 
   const formatAIResponse = (text: string) => {
+    // Clean the text first - remove extra asterisks and clean up formatting
+    let cleanText = text.replace(/\*{3,}/g, '**'); // Replace 3+ asterisks with 2
+    cleanText = cleanText.replace(/\*{2}\s*\*{2}/g, '**'); // Remove empty bold tags
+    
     // Split text into paragraphs
-    const paragraphs = text.split('\n\n');
+    const paragraphs = cleanText.split('\n\n');
     
     return paragraphs.map((paragraph, index) => {
-      // Check if it's a header (starts with ** or ##)
-      if (paragraph.match(/^(\*\*|##).*/)) {
-        const headerText = paragraph.replace(/^\*\*|##|\*\*$/g, '').trim();
+      // Skip empty paragraphs
+      if (!paragraph.trim()) return null;
+      
+      // Check if it's a header (starts with ** and ends with **)
+      if (paragraph.match(/^\*\*[^*]+\*\*$/)) {
+        const headerText = paragraph.replace(/^\*\*|\*\*$/g, '').trim();
         return (
-          <h3 key={index} className="text-lg font-semibold text-blue-700 mb-3 mt-4 first:mt-0">
+          <h3 key={index} className="text-lg font-semibold text-blue-700 mb-3 mt-4 first:mt-0 flex items-center">
+            <Sparkles className="h-5 w-5 mr-2 text-blue-600" />
             {headerText}
           </h3>
         );
@@ -132,10 +139,11 @@ const Reports = () => {
       if (paragraph.match(/^[\*\-]\s/)) {
         const listItems = paragraph.split('\n').filter(item => item.trim());
         return (
-          <ul key={index} className="list-disc list-inside space-y-2 mb-4 ml-4">
+          <ul key={index} className="space-y-2 mb-4 ml-4">
             {listItems.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-gray-700">
-                {item.replace(/^[\*\-]\s/, '').trim()}
+              <li key={itemIndex} className="text-gray-700 flex items-start">
+                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                <span>{item.replace(/^[\*\-]\s/, '').trim()}</span>
               </li>
             ))}
           </ul>
@@ -146,20 +154,23 @@ const Reports = () => {
       if (paragraph.match(/^\d+\./)) {
         const listItems = paragraph.split('\n').filter(item => item.trim());
         return (
-          <ol key={index} className="list-decimal list-inside space-y-2 mb-4 ml-4">
+          <ol key={index} className="space-y-2 mb-4 ml-4">
             {listItems.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-gray-700">
-                {item.replace(/^\d+\.\s?/, '').trim()}
+              <li key={itemIndex} className="text-gray-700 flex items-start">
+                <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mr-3 flex-shrink-0 mt-0.5">
+                  {itemIndex + 1}
+                </span>
+                <span>{item.replace(/^\d+\.\s?/, '').trim()}</span>
               </li>
             ))}
           </ol>
         );
       }
       
-      // Regular paragraph
+      // Regular paragraph with inline formatting
       if (paragraph.trim()) {
-        // Format bold text (**text**)
-        const formattedText = paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Format bold text (**text**) - be more careful with replacement
+        let formattedText = paragraph.replace(/\*\*([^*]+?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
         
         return (
           <p 
@@ -370,7 +381,7 @@ Please provide a helpful, well-formatted response based on the current business 
       {/* Chat Messages */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="max-w-4xl mx-auto p-6 space-y-6">
+          <div className="max-w-4xl mx-auto p-6 space-y-6 pb-32">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -434,7 +445,7 @@ Please provide a helpful, well-formatted response based on the current business 
       </div>
 
       {/* Input Area */}
-      <div className="border-t bg-white/80 backdrop-blur-sm shadow-lg">
+      <div className="border-t bg-white/80 backdrop-blur-sm shadow-lg absolute bottom-0 left-0 right-0">
         <div className="max-w-4xl mx-auto p-6">
           <div className="flex gap-4 items-end">
             <div className="flex-1">
@@ -461,29 +472,6 @@ Please provide a helpful, well-formatted response based on the current business 
                 </>
               )}
             </Button>
-          </div>
-          
-          {/* Quick Questions */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            <p className="text-sm text-gray-600 w-full mb-2">Quick questions:</p>
-            {[
-              "How is my business performing today?",
-              "Which products are selling best?",
-              "What should I focus on this week?",
-              "Show me my financial summary",
-              "What are my biggest concerns right now?"
-            ].map((question, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                onClick={() => setInputMessage(question)}
-                disabled={isLoading}
-                className="text-xs hover:bg-blue-50 hover:border-blue-300"
-              >
-                {question}
-              </Button>
-            ))}
           </div>
         </div>
       </div>
