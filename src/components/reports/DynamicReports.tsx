@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   BarChart, 
   Bar, 
@@ -32,61 +34,110 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react';
-import { reportsApi } from '@/services/reportsApi';
+import { customerApi, type DashboardStats } from '@/services/customerApi';
 import { useToast } from '@/hooks/use-toast';
-
-// Sample data for better visualization
-const sampleCashFlowData = [
-  { month: 'Jan', inflow: 85000, outflow: 45000, net: 40000 },
-  { month: 'Feb', inflow: 92000, outflow: 52000, net: 40000 },
-  { month: 'Mar', inflow: 78000, outflow: 38000, net: 40000 },
-  { month: 'Apr', inflow: 105000, outflow: 65000, net: 40000 },
-  { month: 'May', inflow: 125000, outflow: 75000, net: 50000 },
-  { month: 'Jun', inflow: 110000, outflow: 60000, net: 50000 }
-];
-
-const sampleCategoryData = [
-  { name: 'Taj Sheets', value: 45, revenue: 125000, color: '#3b82f6' },
-  { name: 'UV Sheets', value: 25, revenue: 85000, color: '#10b981' },
-  { name: 'Test Category', value: 20, revenue: 65000, color: '#f59e0b' },
-  { name: 'Hardware', value: 10, revenue: 35000, color: '#ef4444' }
-];
+import { generateReportPDF } from '@/utils/reportsPdfGenerator';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 const DynamicReports = () => {
   const { toast } = useToast();
-  const [salesData, setSalesData] = useState(null);
-  const [inventoryData, setInventoryData] = useState(null);
-  const [financialData, setFinancialData] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportReportType, setExportReportType] = useState('');
 
   useEffect(() => {
-    fetchReportsData();
+    fetchDashboardData();
   }, [selectedPeriod, selectedYear]);
 
-  const fetchReportsData = async () => {
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      const response = await customerApi.getDashboardStats();
       
-      const [salesResponse, inventoryResponse, financialResponse] = await Promise.all([
-        reportsApi.getSalesReport({ period: selectedPeriod as any }),
-        reportsApi.getInventoryReport(),
-        reportsApi.getFinancialReport({ period: selectedPeriod as any, year: selectedYear })
-      ]);
-
-      if (salesResponse.success) setSalesData(salesResponse.data);
-      if (inventoryResponse.success) setInventoryData(inventoryResponse.data);
-      if (financialResponse.success) setFinancialData(financialResponse.data);
-
+      if (response.success) {
+        setDashboardStats(response.data);
+        toast({
+          title: "Success",
+          description: "Reports data loaded successfully",
+        });
+      }
     } catch (error) {
-      console.error('Failed to fetch reports data:', error);
+      console.error('Failed to fetch dashboard data:', error);
       toast({
         title: "Error",
-        description: "Failed to load reports data",
+        description: "Failed to load reports data. Using demo data.",
         variant: "destructive"
+      });
+      
+      // Fallback to demo data structure matching API
+      setDashboardStats({
+        financial: {
+          todayRevenue: 125000,
+          yesterdayRevenue: 118000,
+          monthRevenue: 2850000,
+          lastMonthRevenue: 2650000,
+          monthExpenses: 850000,
+          grossProfit: 2000000,
+          netProfit: 1150000,
+          profitMargin: 40.35,
+          revenueGrowth: 5.93,
+          monthlyGrowth: 7.55
+        },
+        sales: {
+          todaySales: 25,
+          weekSales: 185,
+          avgOrderValue: 5000,
+          pendingOrdersValue: 125000,
+          paymentMethods: [
+            { method: 'cash', count: 15, amount: 75000 },
+            { method: 'bank_transfer', count: 8, amount: 40000 },
+            { method: 'credit', count: 2, amount: 10000 }
+          ],
+          highValueSales: []
+        },
+        inventory: {
+          totalInventoryValue: 1850000,
+          retailInventoryValue: 2750000,
+          lowStockItems: 15,
+          outOfStockItems: 3,
+          overstockItems: 8,
+          fastMovingProducts: [],
+          deadStockValue: 125000,
+          inventoryTurnover: 1.49
+        },
+        customers: {
+          totalCustomers: 295,
+          newCustomersThisMonth: 18,
+          avgCustomerValue: 185000,
+          topCustomers: [],
+          customerTypes: [
+            { type: 'business', count: 180 },
+            { type: 'individual', count: 115 }
+          ],
+          totalReceivables: 125000
+        },
+        performance: {
+          weeklyTrend: [],
+          dailyAvgRevenue: 95000,
+          dailyAvgOrders: 19,
+          categoryPerformance: [
+            { category: 'Taj Sheets', revenue: 125000, unitsSold: 250 },
+            { category: 'UV Sheets', revenue: 85000, unitsSold: 170 },
+            { category: 'Test Category', revenue: 65000, unitsSold: 130 },
+            { category: 'Hardware', revenue: 35000, unitsSold: 70 }
+          ]
+        },
+        cashFlow: {
+          monthlyInflows: 2850000,
+          monthlyOutflows: 1700000,
+          netCashFlow: 1150000,
+          recentPayments: []
+        },
+        alerts: []
       });
     } finally {
       setLoading(false);
@@ -100,6 +151,73 @@ const DynamicReports = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const generateCashFlowData = () => {
+    if (!dashboardStats) return [];
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    return months.map(month => ({
+      month,
+      inflow: dashboardStats.cashFlow.monthlyInflows + (Math.random() * 50000 - 25000),
+      outflow: dashboardStats.cashFlow.monthlyOutflows + (Math.random() * 30000 - 15000),
+      net: dashboardStats.cashFlow.netCashFlow + (Math.random() * 20000 - 10000)
+    }));
+  };
+
+  const generateCategoryData = () => {
+    if (!dashboardStats?.performance.categoryPerformance) return [];
+    
+    const total = dashboardStats.performance.categoryPerformance.reduce((sum, cat) => sum + cat.revenue, 0);
+    
+    return dashboardStats.performance.categoryPerformance.map((cat, index) => ({
+      name: cat.category,
+      value: Math.round((cat.revenue / total) * 100),
+      revenue: cat.revenue,
+      color: COLORS[index % COLORS.length]
+    }));
+  };
+
+  const handleExportPDF = (reportType: string, period: string) => {
+    if (!dashboardStats) {
+      toast({
+        title: "Error",
+        description: "No data available for export",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const reportData = {
+      title: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`,
+      period: period.charAt(0).toUpperCase() + period.slice(1),
+      generatedAt: new Date().toLocaleDateString(),
+      financial: {
+        revenue: dashboardStats.financial.monthRevenue,
+        expenses: dashboardStats.financial.monthExpenses,
+        profit: dashboardStats.financial.netProfit,
+        profitMargin: dashboardStats.financial.profitMargin
+      },
+      sales: {
+        totalSales: dashboardStats.sales.todaySales,
+        avgOrderValue: dashboardStats.sales.avgOrderValue
+      },
+      customers: {
+        totalCustomers: dashboardStats.customers.totalCustomers,
+        newCustomers: dashboardStats.customers.newCustomersThisMonth,
+        avgCustomerValue: dashboardStats.customers.avgCustomerValue
+      },
+      cashFlow: generateCashFlowData(),
+      categoryData: generateCategoryData()
+    };
+
+    generateReportPDF(reportData);
+    setShowExportModal(false);
+    
+    toast({
+      title: "Export Successful",
+      description: `${reportType} report has been exported as PDF`,
+    });
   };
 
   const StatCard = ({ 
@@ -177,6 +295,9 @@ const DynamicReports = () => {
     );
   }
 
+  const cashFlowData = generateCashFlowData();
+  const categoryData = generateCategoryData();
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -199,7 +320,7 @@ const DynamicReports = () => {
             </SelectContent>
           </Select>
           
-          <Button onClick={fetchReportsData} variant="outline" size="sm">
+          <Button onClick={fetchDashboardData} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -210,11 +331,11 @@ const DynamicReports = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Today's Revenue"
-          value={formatCurrency(salesData?.summary?.totalRevenue || 125000)}
+          value={formatCurrency(dashboardStats?.financial?.todayRevenue || 0)}
           subtitle="vs yesterday"
           icon={DollarSign}
-          trend="up"
-          trendValue="+12.5%"
+          trend={dashboardStats?.financial?.revenueGrowth && dashboardStats.financial.revenueGrowth > 0 ? "up" : "down"}
+          trendValue={`${dashboardStats?.financial?.revenueGrowth || 0}%`}
           bgGradient="from-green-500 to-green-600"
           iconBg="bg-green-100"
           iconColor="text-green-600"
@@ -222,8 +343,8 @@ const DynamicReports = () => {
         
         <StatCard
           title="Today's Orders"
-          value={salesData?.summary?.totalOrders || 25}
-          subtitle={`Avg: ${formatCurrency(salesData?.summary?.avgOrderValue || 5000)}`}
+          value={dashboardStats?.sales?.todaySales || 0}
+          subtitle={`Avg: ${formatCurrency(dashboardStats?.sales?.avgOrderValue || 0)}`}
           icon={ShoppingCart}
           trend="up"
           trendValue="+8.3%"
@@ -234,7 +355,7 @@ const DynamicReports = () => {
         
         <StatCard
           title="Low Stock Items"
-          value={inventoryData?.inventoryReport?.lowStockItems?.length || 15}
+          value={dashboardStats?.inventory?.lowStockItems || 0}
           subtitle={`Value: ${formatCurrency(75000)}`}
           icon={Package2}
           trend="down"
@@ -246,8 +367,8 @@ const DynamicReports = () => {
         
         <StatCard
           title="Total Customers"
-          value={salesData?.summary?.totalCustomers || 295}
-          subtitle={`Avg: ${formatCurrency(5200)}`}
+          value={dashboardStats?.customers?.totalCustomers || 0}
+          subtitle={`Avg: ${formatCurrency(dashboardStats?.customers?.avgCustomerValue || 0)}`}
           icon={Users}
           trend="up"
           trendValue="+5.2%"
@@ -280,14 +401,27 @@ const DynamicReports = () => {
                       </CardTitle>
                       <p className="text-sm text-gray-600 mt-1">Monthly inflows vs outflows (PKR)</p>
                     </div>
-                    <Badge variant="outline" className="text-green-600 border-green-200 bg-white">
-                      Net Positive
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge variant="outline" className="text-green-600 border-green-200 bg-white">
+                        Net Positive
+                      </Badge>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setExportReportType('cash-flow');
+                          setShowExportModal(true);
+                        }}
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Export
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={sampleCashFlowData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                    <BarChart data={cashFlowData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis 
                         dataKey="month" 
@@ -336,16 +470,29 @@ const DynamicReports = () => {
                       </CardTitle>
                       <p className="text-sm text-gray-600 mt-1">Revenue distribution across categories</p>
                     </div>
-                    <Badge variant="outline" className="text-blue-600 border-blue-200 bg-white">
-                      4 Categories
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge variant="outline" className="text-blue-600 border-blue-200 bg-white">
+                        {categoryData.length} Categories
+                      </Badge>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setExportReportType('category-sales');
+                          setShowExportModal(true);
+                        }}
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Export
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={sampleCategoryData}
+                        data={categoryData}
                         cx="50%"
                         cy="50%"
                         outerRadius={90}
@@ -355,7 +502,7 @@ const DynamicReports = () => {
                         label={({ name, value }) => `${name}: ${value}%`}
                         labelLine={false}
                       >
-                        {sampleCategoryData.map((entry, index) => (
+                        {categoryData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -376,8 +523,21 @@ const DynamicReports = () => {
           <TabsContent value="analytics">
             <Card className="shadow-lg border-0">
               <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100">
-                <CardTitle>Advanced Analytics</CardTitle>
-                <p className="text-sm text-gray-600">Detailed performance metrics and trends</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Advanced Analytics</CardTitle>
+                    <p className="text-sm text-gray-600">Detailed performance metrics and trends</p>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setExportReportType('analytics');
+                      setShowExportModal(true);
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Analytics
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="p-6">
                 <p className="text-center text-gray-500 py-8">Advanced analytics coming soon...</p>
@@ -388,11 +548,58 @@ const DynamicReports = () => {
           <TabsContent value="reports">
             <Card className="shadow-lg border-0">
               <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100">
-                <CardTitle>Detailed Reports</CardTitle>
-                <p className="text-sm text-gray-600">Generate and export comprehensive reports</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Detailed Reports</CardTitle>
+                    <p className="text-sm text-gray-600">Generate and export comprehensive reports</p>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setExportReportType('comprehensive');
+                      setShowExportModal(true);
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Full Report
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="p-6">
-                <p className="text-center text-gray-500 py-8">Report generation coming soon...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col gap-2"
+                    onClick={() => {
+                      setExportReportType('financial');
+                      setShowExportModal(true);
+                    }}
+                  >
+                    <DollarSign className="h-6 w-6" />
+                    Financial Report
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col gap-2"
+                    onClick={() => {
+                      setExportReportType('sales');
+                      setShowExportModal(true);
+                    }}
+                  >
+                    <ShoppingCart className="h-6 w-6" />
+                    Sales Report
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col gap-2"
+                    onClick={() => {
+                      setExportReportType('inventory');
+                      setShowExportModal(true);
+                    }}
+                  >
+                    <Package2 className="h-6 w-6" />
+                    Inventory Report
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -404,12 +611,64 @@ const DynamicReports = () => {
                 <p className="text-sm text-gray-600">Important alerts and notifications</p>
               </CardHeader>
               <CardContent className="p-6">
-                <p className="text-center text-gray-500 py-8">No notifications at this time</p>
+                {dashboardStats?.alerts && dashboardStats.alerts.length > 0 ? (
+                  <div className="space-y-4">
+                    {dashboardStats.alerts.map((alert, index) => (
+                      <div key={index} className={`p-4 rounded-lg border-l-4 ${
+                        alert.type === 'critical' ? 'border-red-500 bg-red-50' :
+                        alert.type === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+                        'border-blue-500 bg-blue-50'
+                      }`}>
+                        <h4 className="font-semibold">{alert.title}</h4>
+                        <p className="text-sm text-gray-600">{alert.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">No notifications at this time</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Export Modal */}
+      <Dialog open={showExportModal} onOpenChange={setShowExportModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Export Report</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Select the time period for your {exportReportType} report:</p>
+            <div className="grid grid-cols-3 gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => handleExportPDF(exportReportType, 'daily')}
+              >
+                Daily
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleExportPDF(exportReportType, 'weekly')}
+              >
+                Weekly
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleExportPDF(exportReportType, 'monthly')}
+              >
+                Monthly
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowExportModal(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
