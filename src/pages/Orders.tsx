@@ -11,6 +11,7 @@ import { Search, ShoppingCart, Eye, Calendar, DollarSign, User, Package, FileTex
 import { useToast } from "@/hooks/use-toast";
 import { salesApi } from "@/services/api";
 import { OrderDetailsModal } from "@/components/orders/OrderDetailsModal";
+import { PDFExportModal, ExportOptions } from "@/components/orders/PDFExportModal";
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 
@@ -59,6 +60,7 @@ const Orders = () => {
   
   const [selectedOrder, setSelectedOrder] = useState<Sale | null>(null);
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
+  const [isPDFExportModalOpen, setIsPDFExportModalOpen] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -447,18 +449,53 @@ const Orders = () => {
     fetchOrders();
   };
 
-  const handleOrdersExportPDF = async () => {
+  const handleAdvancedPDFExport = async (options: ExportOptions) => {
     try {
       setExportLoading(true);
+      setIsPDFExportModalOpen(false);
       
-      // Fetch all orders for export (without pagination)
-      const response = await salesApi.getAll({ 
-        limit: 10000, // Large number to get all orders
+      // Build query parameters based on options
+      const params: any = { 
+        limit: 10000,
         page: 1
-      });
+      };
+
+      // Add customer filtering
+      if (options.customerScope === 'single' && options.selectedCustomers.length === 1) {
+        params.customerId = options.selectedCustomers[0];
+      } else if (options.customerScope === 'multiple' && options.selectedCustomers.length > 0) {
+        params.customerIds = options.selectedCustomers.join(',');
+      }
+
+      // Add time filtering
+      const now = new Date();
+      switch (options.timeScope) {
+        case 'today':
+          params.dateFrom = now.toISOString().split('T')[0];
+          params.dateTo = now.toISOString().split('T')[0];
+          break;
+        case 'weekly':
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - now.getDay());
+          params.dateFrom = weekStart.toISOString().split('T')[0];
+          params.dateTo = new Date().toISOString().split('T')[0];
+          break;
+        case 'monthly':
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          params.dateFrom = monthStart.toISOString().split('T')[0];
+          params.dateTo = new Date().toISOString().split('T')[0];
+          break;
+        case 'custom':
+          if (options.startDate) params.dateFrom = options.startDate;
+          if (options.endDate) params.dateTo = options.endDate;
+          break;
+      }
+
+      // Fetch filtered orders
+      const response = await salesApi.getAll(params);
       
       if (response.success) {
-        const allOrders = response.data.sales || response.data || [];
+        const filteredOrders = response.data.sales || response.data || [];
         
         // Create PDF
         const pdf = new jsPDF();
@@ -478,11 +515,41 @@ const Orders = () => {
         pdf.setFont('helvetica', 'normal');
         pdf.text(`Export Date: ${new Date().toLocaleString()}`, margin, yPos);
         yPos += 8;
-        pdf.text(`Total Orders: ${allOrders.length}`, margin, yPos);
+        
+        // Add filter information
+        let filterText = '';
+        if (options.customerScope === 'single') {
+          filterText += 'Single Customer | ';
+        } else if (options.customerScope === 'multiple') {
+          filterText += `${options.selectedCustomers.length} Customers | `;
+        } else {
+          filterText += 'All Customers | ';
+        }
+        
+        switch (options.timeScope) {
+          case 'today':
+            filterText += 'Today';
+            break;
+          case 'weekly':
+            filterText += 'This Week';
+            break;
+          case 'monthly':
+            filterText += 'This Month';
+            break;
+          case 'custom':
+            filterText += `${options.startDate} to ${options.endDate}`;
+            break;
+          default:
+            filterText += 'All Time';
+        }
+        
+        pdf.text(`Filters: ${filterText}`, margin, yPos);
+        yPos += 8;
+        pdf.text(`Total Orders: ${filteredOrders.length}`, margin, yPos);
         yPos += 8;
 
         // Calculate total sales
-        const totalSales = allOrders.reduce((sum: number, order: Sale) => sum + (order.subtotal - order.discount), 0);
+        const totalSales = filteredOrders.reduce((sum: number, order: Sale) => sum + (order.subtotal - order.discount), 0);
         pdf.text(`Total Sales: PKR ${totalSales.toLocaleString()}`, margin, yPos);
         yPos += 15;
 
@@ -505,7 +572,7 @@ const Orders = () => {
 
         // Table data
         pdf.setFont('helvetica', 'normal');
-        allOrders.forEach((order: Sale) => {
+        filteredOrders.forEach((order: Sale) => {
           // Check if we need a new page
           if (yPos > pageHeight - 30) {
             pdf.addPage();
@@ -536,11 +603,12 @@ const Orders = () => {
         pdf.text(`Generated by Order Management System`, pageWidth / 2, yPos, { align: 'center' });
 
         // Save PDF
-        pdf.save(`orders_export_${new Date().toISOString().split('T')[0]}.pdf`);
+        const filename = `orders_export_${options.timeScope}_${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(filename);
 
         toast({
           title: "PDF Export Successful",
-          description: `Exported ${allOrders.length} orders to PDF.`,
+          description: `Exported ${filteredOrders.length} orders to PDF.`,
         });
       }
     } catch (error) {
@@ -602,6 +670,17 @@ const Orders = () => {
     );
   }
 
+  // Get unique customers for the export modal
+  const uniqueCustomers = orders.reduce((acc: Array<{id: number, name: string}>, order) => {
+    if (order.customerId && !acc.find(c => c.id === order.customerId)) {
+      acc.push({
+        id: order.customerId,
+        name: order.customerName || `Customer #${order.customerId}`
+      });
+    }
+    return acc;
+  }, []);
+
   return (
     <div className="flex-1 p-4 md:p-6 space-y-6 min-h-screen bg-slate-50">
       <div className="flex items-center justify-between mb-8">
@@ -615,7 +694,7 @@ const Orders = () => {
         <div className="flex gap-2">
           <Button 
             variant="outline" 
-            onClick={handleOrdersExportPDF}
+            onClick={() => setIsPDFExportModalOpen(true)}
             disabled={exportLoading}
             className="bg-red-600 hover:bg-red-700 text-white border-red-600"
           >
@@ -872,6 +951,15 @@ const Orders = () => {
         onOpenChange={setIsOrderDetailsOpen}
         order={selectedOrder}
         onOrderUpdated={fetchOrders}
+      />
+
+      {/* PDF Export Modal */}
+      <PDFExportModal
+        open={isPDFExportModalOpen}
+        onOpenChange={setIsPDFExportModalOpen}
+        onExport={handleAdvancedPDFExport}
+        customers={uniqueCustomers}
+        isLoading={exportLoading}
       />
     </div>
   );

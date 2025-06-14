@@ -67,6 +67,7 @@ export interface FinanceOverview {
     growth: number;
   };
   profit: {
+    gross?: number;   // Added for safety (the API sends gross/net)
     net: number;
     margin: number;
   };
@@ -75,6 +76,8 @@ export interface FinanceOverview {
     outflow: number;
     net: number;
   };
+  accountsReceivable: number;  // <-- Added for API alignment
+  accountsPayable: number;     // <-- Added for API alignment
 }
 
 // Generic API request function
