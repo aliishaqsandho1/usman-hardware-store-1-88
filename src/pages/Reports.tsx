@@ -1,26 +1,23 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Brain, Lightbulb, TrendingUp, AlertTriangle, Target, Sparkles, RefreshCw, DollarSign, Package, Users, BarChart3, Activity, Zap, Eye, ArrowUpRight, ArrowDownRight, Clock, CheckCircle, XCircle, Info } from "lucide-react";
+import { MessageCircle, Send, Bot, User, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const GEMINI_API_KEY = "AIzaSyDscgxHRLCy4suVBigT1g_pXMnE7tH_Ejw";
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-interface AIInsight {
-  type: 'insight' | 'recommendation' | 'alert' | 'opportunity';
-  title: string;
+interface Message {
+  id: string;
+  type: 'user' | 'ai';
   content: string;
-  priority: 'high' | 'medium' | 'low';
-  category: string;
-  impact?: string;
-  actionable?: boolean;
+  timestamp: Date;
 }
 
 interface EnhancedStats {
@@ -31,6 +28,7 @@ interface EnhancedStats {
     revenueGrowth: number;
     netProfit: number;
     grossProfit: number;
+    monthExpenses: number;
   };
   sales: {
     todaySales: number;
@@ -73,68 +71,19 @@ interface EnhancedStats {
   }>;
 }
 
-const LoadingOverlay = () => (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-    <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
-      <div className="text-center">
-        <div className="relative mb-6">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
-            <Brain className="h-8 w-8 text-white" />
-          </div>
-          <div className="absolute inset-0 w-16 h-16 mx-auto border-4 border-blue-200 rounded-full animate-spin border-t-transparent"></div>
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Generating AI Insights
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Our AI is analyzing your business data to provide intelligent insights and recommendations.
-        </p>
-        <div className="space-y-2">
-          <Progress value={75} className="w-full" />
-          <p className="text-sm text-gray-500">Processing business metrics...</p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const StatsCard = ({ title, value, icon: Icon, trend, color, subtitle }: {
-  title: string;
-  value: string | number;
-  icon: any;
-  trend?: number;
-  color: string;
-  subtitle?: string;
-}) => (
-  <Card className={`border-0 shadow-lg bg-gradient-to-br ${color}`}>
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between">
-        <div className="text-white">
-          <p className="text-sm opacity-90">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
-          {subtitle && <p className="text-xs opacity-75">{subtitle}</p>}
-          {trend !== undefined && (
-            <div className="flex items-center mt-1">
-              {trend >= 0 ? (
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-              ) : (
-                <ArrowDownRight className="h-3 w-3 mr-1" />
-              )}
-              <span className="text-xs">{Math.abs(trend)}%</span>
-            </div>
-          )}
-        </div>
-        <Icon className="h-8 w-8 text-white opacity-80" />
-      </div>
-    </CardContent>
-  </Card>
-);
-
 const Reports = () => {
   const { toast } = useToast();
-  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
-  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
-  const [customQuery, setCustomQuery] = useState("");
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      type: 'ai',
+      content: "Hello! I'm your business AI assistant. I have access to all your current business data including sales, inventory, finances, and customer information. Feel free to ask me anything about your business performance, trends, or get recommendations for improvement.",
+      timestamp: new Date()
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch enhanced stats from the API
   const { data: enhancedStats, isLoading: statsLoading } = useQuery({
@@ -147,184 +96,13 @@ const Reports = () => {
     refetchInterval: 5 * 60 * 1000,
   });
 
-  const generateAIInsights = async (customPrompt?: string) => {
-    if (!enhancedStats?.data) return;
-
-    setIsGeneratingInsights(true);
-    try {
-      const businessData: EnhancedStats = enhancedStats.data;
-      
-      const prompt = customPrompt || `
-You are an expert business analyst providing actionable insights for a growing business. Analyze this comprehensive business data and provide strategic recommendations.
-
-Current Business Performance:
-💰 Financial Health:
-- Today's Revenue: Rs.${businessData.financial?.todayRevenue || 0}
-- Monthly Revenue: Rs.${businessData.financial?.monthRevenue || 0}
-- Net Profit: Rs.${businessData.financial?.netProfit || 0}
-- Profit Margin: ${businessData.financial?.profitMargin || 0}%
-- Revenue Growth: ${businessData.financial?.revenueGrowth || 0}%
-
-📊 Sales Performance:
-- Today's Sales: ${businessData.sales?.todaySales || 0}
-- Weekly Sales: ${businessData.sales?.weekSales || 0}
-- Average Order Value: Rs.${businessData.sales?.avgOrderValue || 0}
-- Top Sales: ${businessData.sales?.highValueSales?.slice(0, 3).map(s => `Rs.${s.amount} (${s.customer})`).join(', ') || 'No recent high-value sales'}
-
-📦 Inventory Status:
-- Total Inventory Value: Rs.${businessData.inventory?.totalInventoryValue || 0}
-- Low Stock Items: ${businessData.inventory?.lowStockItems || 0}
-- Dead Stock Value: Rs.${businessData.inventory?.deadStockValue || 0}
-- Inventory Turnover: ${businessData.inventory?.inventoryTurnover || 0}
-- Fast Moving: ${businessData.inventory?.fastMovingProducts?.slice(0, 3).map(p => `${p.name} (${p.sold} sold)`).join(', ') || 'No data'}
-
-👥 Customer Insights:
-- Total Customers: ${businessData.customers?.totalCustomers || 0}
-- New This Month: ${businessData.customers?.newCustomersThisMonth || 0}
-- Average Customer Value: Rs.${businessData.customers?.avgCustomerValue || 0}
-- Outstanding Receivables: Rs.${businessData.customers?.totalReceivables || 0}
-
-💸 Cash Flow:
-- Net Cash Flow: Rs.${businessData.cashFlow?.netCashFlow || 0}
-- Monthly Inflows: Rs.${businessData.cashFlow?.monthlyInflows || 0}
-- Monthly Outflows: Rs.${businessData.cashFlow?.monthlyOutflows || 0}
-
-🚨 Active Alerts: ${businessData.alerts?.length || 0} critical items need attention
-
-Provide exactly 6-8 actionable insights in this JSON format:
-[
-  {
-    "type": "insight|recommendation|alert|opportunity",
-    "title": "Brief, impactful title",
-    "content": "Detailed, actionable insight with specific numbers and recommendations",
-    "priority": "high|medium|low",
-    "category": "Financial|Sales|Inventory|Customer|Operations",
-    "impact": "Potential impact description",
-    "actionable": true
-  }
-]
-
-Focus on:
-1. Critical issues requiring immediate attention
-2. Revenue optimization opportunities  
-3. Cost reduction strategies
-4. Customer retention and growth
-5. Inventory optimization
-6. Cash flow improvements
-7. Strategic growth initiatives
-
-Make each insight specific, actionable, and valuable for decision-making. Use Pakistani Rupees (Rs.) for currency.
-`;
-
-      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topP: 0.8,
-            maxOutputTokens: 2048,
-          }
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate AI insights');
-      }
-
-      const result = await response.json();
-      const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (aiResponse) {
-        try {
-          const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
-          if (jsonMatch) {
-            const insights = JSON.parse(jsonMatch[0]);
-            setAiInsights(insights);
-          } else {
-            // Fallback parsing
-            const lines = aiResponse.split('\n').filter(line => line.trim());
-            const fallbackInsights = lines.slice(0, 6).map((line, index) => ({
-              type: ['insight', 'recommendation', 'alert', 'opportunity'][index % 4],
-              title: `Business Intelligence ${index + 1}`,
-              content: line.trim(),
-              priority: index < 2 ? 'high' : index < 4 ? 'medium' : 'low',
-              category: ['Financial', 'Sales', 'Inventory', 'Customer', 'Operations'][index % 5],
-              impact: 'Significant business impact expected',
-              actionable: true
-            }));
-            setAiInsights(fallbackInsights);
-          }
-        } catch (parseError) {
-          console.error('Failed to parse AI response:', parseError);
-          throw new Error('Invalid AI response format');
-        }
-      }
-
-      toast({
-        title: "Insights Generated Successfully",
-        description: "Your business intelligence report is ready with actionable recommendations.",
-      });
-
-    } catch (error) {
-      console.error('Error generating AI insights:', error);
-      toast({
-        title: "Generation Failed",
-        description: "Unable to generate insights. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingInsights(false);
-    }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    if (enhancedStats?.data && aiInsights.length === 0) {
-      generateAIInsights();
-    }
-  }, [enhancedStats]);
-
-  const handleCustomQuery = async () => {
-    if (!customQuery.trim()) return;
-    await generateAIInsights(customQuery);
-    setCustomQuery("");
-  };
-
-  const getInsightIcon = (type: string) => {
-    switch (type) {
-      case 'insight': return <Brain className="h-5 w-5" />;
-      case 'recommendation': return <Lightbulb className="h-5 w-5" />;
-      case 'alert': return <AlertTriangle className="h-5 w-5" />;
-      case 'opportunity': return <Target className="h-5 w-5" />;
-      default: return <Sparkles className="h-5 w-5" />;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'insight': return 'from-blue-500 to-blue-600';
-      case 'recommendation': return 'from-purple-500 to-purple-600';
-      case 'alert': return 'from-red-500 to-red-600';
-      case 'opportunity': return 'from-green-500 to-green-600';
-      default: return 'from-gray-500 to-gray-600';
-    }
-  };
+    scrollToBottom();
+  }, [messages]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-PK', {
@@ -335,211 +113,308 @@ Make each insight specific, actionable, and valuable for decision-making. Use Pa
     }).format(amount);
   };
 
+  const generateBusinessContext = (businessData: EnhancedStats) => {
+    const currentDate = new Date().toLocaleDateString();
+    
+    return `
+BUSINESS CONTEXT & CURRENT DATA (as of ${currentDate}):
+
+FINANCIAL OVERVIEW:
+- Today's Revenue: ${formatCurrency(businessData.financial?.todayRevenue || 0)}
+- Monthly Revenue: ${formatCurrency(businessData.financial?.monthRevenue || 0)}
+- Net Profit: ${formatCurrency(businessData.financial?.netProfit || 0)}
+- Gross Profit: ${formatCurrency(businessData.financial?.grossProfit || 0)}
+- Monthly Expenses: ${formatCurrency(businessData.financial?.monthExpenses || 0)}
+- Profit Margin: ${businessData.financial?.profitMargin || 0}%
+- Revenue Growth: ${businessData.financial?.revenueGrowth || 0}%
+
+SALES PERFORMANCE:
+- Today's Sales: ${businessData.sales?.todaySales || 0} orders
+- Weekly Sales: ${businessData.sales?.weekSales || 0} orders
+- Average Order Value: ${formatCurrency(businessData.sales?.avgOrderValue || 0)}
+- Recent High-Value Sales: ${businessData.sales?.highValueSales?.slice(0, 3).map(s => `${formatCurrency(s.amount)} from ${s.customer}`).join(', ') || 'No recent high-value sales'}
+
+INVENTORY STATUS:
+- Total Inventory Value: ${formatCurrency(businessData.inventory?.totalInventoryValue || 0)}
+- Low Stock Items: ${businessData.inventory?.lowStockItems || 0} products need attention
+- Dead Stock Value: ${formatCurrency(businessData.inventory?.deadStockValue || 0)}
+- Inventory Turnover: ${businessData.inventory?.inventoryTurnover || 0}
+- Top Selling Products: ${businessData.inventory?.fastMovingProducts?.slice(0, 3).map(p => `${p.name} (${p.sold} sold, ${p.remaining} remaining)`).join(', ') || 'No fast-moving products data'}
+
+CUSTOMER INSIGHTS:
+- Total Customers: ${businessData.customers?.totalCustomers || 0}
+- New Customers This Month: ${businessData.customers?.newCustomersThisMonth || 0}
+- Average Customer Value: ${formatCurrency(businessData.customers?.avgCustomerValue || 0)}
+- Outstanding Receivables: ${formatCurrency(businessData.customers?.totalReceivables || 0)}
+
+CASH FLOW:
+- Net Cash Flow: ${formatCurrency(businessData.cashFlow?.netCashFlow || 0)}
+- Monthly Inflows: ${formatCurrency(businessData.cashFlow?.monthlyInflows || 0)}
+- Monthly Outflows: ${formatCurrency(businessData.cashFlow?.monthlyOutflows || 0)}
+
+ALERTS & CRITICAL ISSUES:
+${businessData.alerts?.map(alert => `- ${alert.title}: ${alert.message}`).join('\n') || 'No critical alerts'}
+
+BUSINESS TYPE: This appears to be a manufacturing/trading business dealing with wood products, sheets, and building materials based on the product names (MDF, HDX, KMI, ZRK series products).
+
+Please provide helpful, actionable insights and recommendations based on this current business data. Keep responses conversational and easy to understand for business owners. Use Pakistani Rupees (PKR) for all currency references.
+`;
+  };
+
+  const sendMessageToGemini = async (userMessage: string) => {
+    if (!enhancedStats?.data) {
+      throw new Error('Business data not available');
+    }
+
+    const businessContext = generateBusinessContext(enhancedStats.data);
+    
+    const prompt = `${businessContext}
+
+USER QUESTION: ${userMessage}
+
+Please provide a helpful, conversational response based on the current business data above. Be specific, actionable, and easy to understand. If the user is asking about trends, performance, or recommendations, use the actual numbers from the data. Keep your response friendly and professional.`;
+
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.8,
+          maxOutputTokens: 1024,
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get AI response');
+    }
+
+    const result = await response.json();
+    return result.candidates?.[0]?.content?.parts?.[0]?.text || 'I apologize, but I couldn\'t generate a response at the moment. Please try again.';
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: inputMessage.trim(),
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      const aiResponse = await sendMessageToGemini(userMessage.content);
+      
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: aiResponse,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Error sending message to AI:', error);
+      
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: "I apologize, but I'm having trouble accessing the information right now. Please check your connection and try again.",
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+      
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   if (statsLoading) {
-    return <LoadingOverlay />;
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-lg text-gray-600">Loading business data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
-      {isGeneratingInsights && <LoadingOverlay />}
-      
-      <div className="flex-1 p-6 space-y-8 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <div className="flex-1 flex flex-col h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      {/* Header */}
+      <div className="border-b bg-white/80 backdrop-blur-sm shadow-sm">
+        <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-4">
             <SidebarTrigger />
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
-                <Brain className="h-10 w-10 text-blue-600" />
-                Business Intelligence Hub
-              </h1>
-              <p className="text-slate-600 text-lg">AI-powered insights and strategic recommendations</p>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <MessageCircle className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Ask AI
+                </h1>
+                <p className="text-gray-600">Your intelligent business assistant</p>
+              </div>
             </div>
           </div>
-          <Button 
-            onClick={() => generateAIInsights()}
-            disabled={isGeneratingInsights}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
-            size="lg"
-          >
-            {isGeneratingInsights ? (
-              <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="h-5 w-5 mr-2" />
-            )}
-            {isGeneratingInsights ? 'Generating...' : 'Refresh Insights'}
-          </Button>
-        </div>
-
-        {/* Business Metrics Overview */}
-        {enhancedStats?.data && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard
-              title="Monthly Revenue"
-              value={formatCurrency(enhancedStats.data.financial.monthRevenue)}
-              icon={DollarSign}
-              trend={enhancedStats.data.financial.revenueGrowth}
-              color="from-emerald-500 to-emerald-600"
-              subtitle={`Profit: ${formatCurrency(enhancedStats.data.financial.netProfit)}`}
-            />
-            <StatsCard
-              title="Weekly Sales"
-              value={enhancedStats.data.sales.weekSales}
-              icon={BarChart3}
-              color="from-blue-500 to-blue-600"
-              subtitle={`Avg Order: ${formatCurrency(enhancedStats.data.sales.avgOrderValue)}`}
-            />
-            <StatsCard
-              title="Inventory Value"
-              value={formatCurrency(enhancedStats.data.inventory.totalInventoryValue)}
-              icon={Package}
-              color="from-purple-500 to-purple-600"
-              subtitle={`${enhancedStats.data.inventory.lowStockItems} items low stock`}
-            />
-            <StatsCard
-              title="Total Customers"
-              value={enhancedStats.data.customers.totalCustomers}
-              icon={Users}
-              color="from-orange-500 to-orange-600"
-              subtitle={`${enhancedStats.data.customers.newCustomersThisMonth} new this month`}
-            />
-          </div>
-        )}
-
-        {/* Custom Query Section */}
-        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-100 rounded-t-lg">
-            <CardTitle className="text-xl font-bold text-indigo-800 flex items-center gap-3">
-              <Brain className="h-6 w-6" />
-              Ask Our Business AI Anything
-            </CardTitle>
-            <p className="text-indigo-600">Get personalized insights about your business performance</p>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex gap-4">
-              <Input
-                placeholder="Ask about revenue trends, inventory optimization, customer insights, or any business question..."
-                value={customQuery}
-                onChange={(e) => setCustomQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleCustomQuery()}
-                className="flex-1 h-12 text-lg"
-              />
-              <Button 
-                onClick={handleCustomQuery}
-                disabled={isGeneratingInsights || !customQuery.trim()}
-                className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-8"
-                size="lg"
-              >
-                <Zap className="h-5 w-5 mr-2" />
-                Ask AI
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* AI Insights Grid */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Eye className="h-6 w-6 text-blue-600" />
-              Strategic Business Insights
-            </h2>
-            <Badge variant="outline" className="text-lg px-4 py-2">
-              {aiInsights.length} Active Insights
+          
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              Connected
+            </Badge>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              Data Updated: {new Date().toLocaleTimeString()}
             </Badge>
           </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {aiInsights.map((insight, index) => (
-              <Card key={index} className="h-full hover:shadow-2xl transition-all duration-500 border-0 overflow-hidden group">
-                <div className={`h-2 bg-gradient-to-r ${getTypeColor(insight.type)}`}></div>
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-3 rounded-xl bg-gradient-to-r ${getTypeColor(insight.type)} text-white shadow-lg`}>
-                        {getInsightIcon(insight.type)}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">
-                          {insight.title}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge className={getPriorityColor(insight.priority)} variant="default">
-                            {insight.priority.toUpperCase()}
-                          </Badge>
-                          <span className="text-sm text-gray-500 font-medium">
-                            {insight.category}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="max-w-4xl mx-auto p-6 space-y-6">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {message.type === 'ai' && (
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-5 w-5 text-white" />
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    {insight.content}
-                  </p>
-                  
-                  {insight.impact && (
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Activity className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-semibold text-blue-900">Expected Impact</span>
-                      </div>
-                      <p className="text-sm text-blue-800">{insight.impact}</p>
+                )}
+                
+                <Card className={`max-w-2xl ${
+                  message.type === 'user' 
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
+                    : 'bg-white shadow-lg border-0'
+                }`}>
+                  <CardContent className="p-4">
+                    <p className={`text-sm leading-relaxed whitespace-pre-wrap ${
+                      message.type === 'user' ? 'text-white' : 'text-gray-800'
+                    }`}>
+                      {message.content}
+                    </p>
+                    <p className={`text-xs mt-2 ${
+                      message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
+                      {message.timestamp.toLocaleTimeString()}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {message.type === 'user' && (
+                  <div className="w-10 h-10 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex gap-4 justify-start">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-5 w-5 text-white" />
+                </div>
+                <Card className="bg-white shadow-lg border-0">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                      <span className="text-gray-600">AI is thinking...</span>
                     </div>
-                  )}
-                  
-                  {insight.actionable && (
-                    <div className="flex items-center gap-2 text-green-600">
-                      <CheckCircle className="h-4 w-4" />
-                      <span className="text-sm font-medium">Actionable Recommendation</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Input Area */}
+      <div className="border-t bg-white/80 backdrop-blur-sm shadow-lg">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <Input
+                placeholder="Ask me anything about your business performance, sales trends, inventory, or get recommendations..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={isLoading}
+                className="h-12 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
+            <Button
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || isLoading}
+              className="h-12 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-5 w-5 mr-2" />
+                  Send
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {/* Quick Questions */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <p className="text-sm text-gray-600 w-full mb-2">Quick questions:</p>
+            {[
+              "How is my business performing today?",
+              "Which products are selling best?",
+              "What should I focus on this week?",
+              "Show me my financial summary",
+              "What are my biggest concerns right now?"
+            ].map((question, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                onClick={() => setInputMessage(question)}
+                disabled={isLoading}
+                className="text-xs hover:bg-blue-50 hover:border-blue-300"
+              >
+                {question}
+              </Button>
             ))}
           </div>
         </div>
-
-        {/* Empty State */}
-        {!isGeneratingInsights && aiInsights.length === 0 && (
-          <Card className="text-center py-16 border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-            <CardContent>
-              <div className="max-w-md mx-auto space-y-6">
-                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <Brain className="h-12 w-12 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    Ready to Generate Insights
-                  </h3>
-                  <p className="text-gray-600 text-lg mb-6">
-                    Click the button below to generate AI-powered business intelligence and strategic recommendations.
-                  </p>
-                </div>
-                <Button 
-                  onClick={() => generateAIInsights()}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
-                  size="lg"
-                >
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Generate Business Insights
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Footer */}
-        <div className="text-center py-8">
-          <p className="text-gray-500 flex items-center justify-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            Powered by advanced AI technology for intelligent business decisions
-          </p>
-        </div>
       </div>
-    </>
+    </div>
   );
 };
 
