@@ -50,6 +50,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { customerApi, type DashboardStats } from '@/services/customerApi';
+import { reportsApi, type ProfitabilityTrendData, type CustomerSegmentData, type RevenueForecastData, type InventoryHealthData, type KPIMetricsData, type PerformanceScorecardData, type OpportunityData, type RiskData, type ActionItemData } from '@/services/reportsApi';
 import { useToast } from '@/hooks/use-toast';
 import { generateReportPDF } from '@/utils/reportsPdfGenerator';
 
@@ -66,98 +67,151 @@ const DynamicReports = () => {
   const [forecastPeriod, setForecastPeriod] = useState('6');
   const [alertThreshold, setAlertThreshold] = useState('10');
 
+  // Real data states
+  const [profitabilityData, setProfitabilityData] = useState<ProfitabilityTrendData[]>([]);
+  const [customerSegments, setCustomerSegments] = useState<CustomerSegmentData[]>([]);
+  const [revenueForecast, setRevenueForecast] = useState<RevenueForecastData[]>([]);
+  const [inventoryHealth, setInventoryHealth] = useState<InventoryHealthData[]>([]);
+  const [kpiMetrics, setKpiMetrics] = useState<KPIMetricsData | null>(null);
+  const [performanceScorecard, setPerformanceScorecard] = useState<PerformanceScorecardData | null>(null);
+  const [growthOpportunities, setGrowthOpportunities] = useState<OpportunityData[]>([]);
+  const [riskFactors, setRiskFactors] = useState<RiskData[]>([]);
+  const [actionItems, setActionItems] = useState<ActionItemData[]>([]);
+
   useEffect(() => {
-    fetchDashboardData();
+    fetchAllReportsData();
   }, [selectedPeriod, selectedYear]);
 
-  const fetchDashboardData = async () => {
+  const fetchAllReportsData = async () => {
     try {
       setLoading(true);
-      const response = await customerApi.getDashboardStats();
       
-      if (response.success) {
-        setDashboardStats(response.data);
-        toast({
-          title: "Success",
-          description: "Reports data loaded successfully",
-        });
+      // Fetch dashboard stats
+      const dashboardResponse = await customerApi.getDashboardStats();
+      if (dashboardResponse.success) {
+        setDashboardStats(dashboardResponse.data);
       }
+
+      // Fetch all advanced reports data
+      await Promise.all([
+        fetchProfitabilityData(),
+        fetchCustomerSegmentation(),
+        fetchRevenueForecast(),
+        fetchInventoryHealth(),
+        fetchKPIMetrics(),
+        fetchPerformanceScorecard(),
+        fetchStrategicData()
+      ]);
+
+      toast({
+        title: "Success",
+        description: "All reports data loaded successfully",
+      });
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      console.error('Failed to fetch reports data:', error);
       toast({
         title: "Error",
-        description: "Failed to load reports data. Using demo data.",
+        description: "Failed to load some reports data",
         variant: "destructive"
-      });
-      
-      // Enhanced demo data for unique reports
-      setDashboardStats({
-        financial: {
-          todayRevenue: 125000,
-          yesterdayRevenue: 118000,
-          monthRevenue: 2850000,
-          lastMonthRevenue: 2650000,
-          monthExpenses: 850000,
-          grossProfit: 2000000,
-          netProfit: 1150000,
-          profitMargin: 40.35,
-          revenueGrowth: 5.93,
-          monthlyGrowth: 7.55
-        },
-        sales: {
-          todaySales: 25,
-          weekSales: 185,
-          avgOrderValue: 5000,
-          pendingOrdersValue: 125000,
-          paymentMethods: [
-            { method: 'cash', count: 15, amount: 75000 },
-            { method: 'bank_transfer', count: 8, amount: 40000 },
-            { method: 'credit', count: 2, amount: 10000 }
-          ],
-          highValueSales: []
-        },
-        inventory: {
-          totalInventoryValue: 1850000,
-          retailInventoryValue: 2750000,
-          lowStockItems: 15,
-          outOfStockItems: 3,
-          overstockItems: 8,
-          fastMovingProducts: [],
-          deadStockValue: 125000,
-          inventoryTurnover: 1.49
-        },
-        customers: {
-          totalCustomers: 295,
-          newCustomersThisMonth: 18,
-          avgCustomerValue: 185000,
-          topCustomers: [],
-          customerTypes: [
-            { type: 'business', count: 180 },
-            { type: 'individual', count: 115 }
-          ],
-          totalReceivables: 125000
-        },
-        performance: {
-          weeklyTrend: [],
-          dailyAvgRevenue: 95000,
-          dailyAvgOrders: 19,
-          categoryPerformance: [
-            { category: 'Taj Sheets', revenue: 125000, unitsSold: 250 },
-            { category: 'UV Sheets', revenue: 85000, unitsSold: 170 },
-            { category: 'Test Category', revenue: 65000, unitsSold: 130 },
-            { category: 'Hardware', revenue: 35000, unitsSold: 70 }
-          ]
-        },
-        cashFlow: {
-          monthlyInflows: 2850000,
-          monthlyOutflows: 1700000,
-          netCashFlow: 1150000,
-          recentPayments: []
-        },
-        alerts: []
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProfitabilityData = async () => {
+    try {
+      const response = await reportsApi.getProfitabilityTrend({
+        period: selectedPeriod,
+        year: selectedYear,
+        months: 12
+      });
+      if (response.success) {
+        setProfitabilityData(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch profitability data:', error);
+    }
+  };
+
+  const fetchCustomerSegmentation = async () => {
+    try {
+      const response = await reportsApi.getCustomerSegmentation({
+        period: selectedPeriod,
+        segmentBy: 'value'
+      });
+      if (response.success) {
+        setCustomerSegments(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch customer segmentation:', error);
+    }
+  };
+
+  const fetchRevenueForecast = async () => {
+    try {
+      const response = await reportsApi.getRevenueForecast({
+        months: parseInt(forecastPeriod),
+        includeConfidence: true,
+        model: 'ai'
+      });
+      if (response.success) {
+        setRevenueForecast(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch revenue forecast:', error);
+    }
+  };
+
+  const fetchInventoryHealth = async () => {
+    try {
+      const response = await reportsApi.getInventoryHealthMatrix();
+      if (response.success) {
+        setInventoryHealth(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch inventory health:', error);
+    }
+  };
+
+  const fetchKPIMetrics = async () => {
+    try {
+      const response = await reportsApi.getKPIMetrics({
+        period: selectedPeriod,
+        compareWith: 'lastPeriod'
+      });
+      if (response.success) {
+        setKpiMetrics(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch KPI metrics:', error);
+    }
+  };
+
+  const fetchPerformanceScorecard = async () => {
+    try {
+      const response = await reportsApi.getPerformanceScorecard();
+      if (response.success) {
+        setPerformanceScorecard(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch performance scorecard:', error);
+    }
+  };
+
+  const fetchStrategicData = async () => {
+    try {
+      const [opportunitiesRes, risksRes, actionsRes] = await Promise.all([
+        reportsApi.getGrowthOpportunities(),
+        reportsApi.getRiskFactors(),
+        reportsApi.getActionItems({ priority: 'high', timeframe: 'short' })
+      ]);
+
+      if (opportunitiesRes.success) setGrowthOpportunities(opportunitiesRes.data);
+      if (risksRes.success) setRiskFactors(risksRes.data);
+      if (actionsRes.success) setActionItems(actionsRes.data);
+    } catch (error) {
+      console.error('Failed to fetch strategic data:', error);
     }
   };
 
@@ -170,55 +224,33 @@ const DynamicReports = () => {
     }).format(amount);
   };
 
-  // Generate unique data for different visualizations
-  const generateProfitabilityAnalysis = () => {
-    if (!dashboardStats) return [];
-    
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    return months.map((month, index) => ({
-      month,
-      revenue: dashboardStats.financial.monthRevenue + (Math.random() * 100000 - 50000),
-      costs: dashboardStats.financial.monthExpenses + (Math.random() * 50000 - 25000),
-      profit: dashboardStats.financial.netProfit + (Math.random() * 80000 - 40000),
-      margin: 30 + (Math.random() * 20 - 10)
+  // Process customer segments for chart
+  const processCustomerSegments = () => {
+    const segmentCounts = customerSegments.reduce((acc, customer) => {
+      acc[customer.segment] = (acc[customer.segment] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(segmentCounts).map(([segment, count]) => ({
+      segment: segment.charAt(0).toUpperCase() + segment.slice(1),
+      customers: count,
+      revenue: customerSegments
+        .filter(c => c.segment === segment)
+        .reduce((sum, c) => sum + c.value, 0)
     }));
   };
 
-  const generateSalesGrowthTrend = () => {
-    const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
-    return quarters.map(quarter => ({
-      quarter,
-      currentYear: 800000 + (Math.random() * 400000),
-      lastYear: 600000 + (Math.random() * 300000),
-      target: 1000000 + (Math.random() * 200000)
-    }));
-  };
+  // Process inventory health for visualization
+  const processInventoryHealth = () => {
+    const statusCounts = inventoryHealth.reduce((acc, item) => {
+      acc[item.status] = (acc[item.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const generateCustomerSegmentation = () => {
-    return [
-      { segment: 'High Value', customers: 45, revenue: 1500000, avgSpend: 33333 },
-      { segment: 'Regular', customers: 120, revenue: 800000, avgSpend: 6667 },
-      { segment: 'Occasional', customers: 80, revenue: 350000, avgSpend: 4375 },
-      { segment: 'New', customers: 50, revenue: 200000, avgSpend: 4000 }
-    ];
-  };
-
-  const generateInventoryHealth = () => {
-    return [
-      { category: 'Healthy Stock', count: 85, value: 1200000, percentage: 65 },
-      { category: 'Low Stock', count: 15, value: 300000, percentage: 12 },
-      { category: 'Overstock', count: 8, value: 250000, percentage: 8 },
-      { category: 'Dead Stock', count: 12, value: 100000, percentage: 15 }
-    ];
-  };
-
-  const generatePredictiveAnalytics = () => {
-    const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months.map(month => ({
-      month,
-      predicted: 2800000 + (Math.random() * 600000),
-      confidence: 85 + (Math.random() * 10),
-      trend: Math.random() > 0.5 ? 'up' : 'down'
+    return Object.entries(statusCounts).map(([status, count]) => ({
+      category: status.charAt(0).toUpperCase() + status.slice(1),
+      count,
+      percentage: Math.round((count / inventoryHealth.length) * 100)
     }));
   };
 
@@ -291,11 +323,8 @@ const DynamicReports = () => {
     );
   }
 
-  const profitabilityData = generateProfitabilityAnalysis();
-  const salesGrowthData = generateSalesGrowthTrend();
-  const customerSegments = generateCustomerSegmentation();
-  const inventoryHealth = generateInventoryHealth();
-  const predictiveData = generatePredictiveAnalytics();
+  const processedCustomerSegments = processCustomerSegments();
+  const processedInventoryHealth = processInventoryHealth();
 
   return (
     <div className="space-y-8">
@@ -320,7 +349,7 @@ const DynamicReports = () => {
             </SelectContent>
           </Select>
           
-          <Button onClick={fetchDashboardData} variant="outline" size="sm">
+          <Button onClick={fetchAllReportsData} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -376,13 +405,12 @@ const DynamicReports = () => {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="month" stroke="#666" />
+                    <XAxis dataKey="period" stroke="#666" />
                     <YAxis stroke="#666" tickFormatter={(value) => `${(value/1000).toFixed(0)}k`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRevenue)" name="Revenue" />
                     <Area type="monotone" dataKey="profit" stroke="#3b82f6" fillOpacity={1} fill="url(#colorProfit)" name="Profit" />
-                    <Line type="monotone" dataKey="margin" stroke="#f59e0b" strokeWidth={3} name="Margin %" />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -400,13 +428,13 @@ const DynamicReports = () => {
                     <p className="text-sm text-gray-600 mt-1">Customer segments by value and behavior</p>
                   </div>
                   <Badge variant="outline" className="text-purple-600 border-purple-200 bg-white">
-                    4 Segments
+                    {processedCustomerSegments.length} Segments
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={customerSegments} layout="horizontal">
+                  <BarChart data={processedCustomerSegments} layout="horizontal">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis type="number" stroke="#666" tickFormatter={(value) => `${(value/1000).toFixed(0)}k`} />
                     <YAxis dataKey="segment" type="category" stroke="#666" width={80} />
@@ -417,45 +445,11 @@ const DynamicReports = () => {
               </CardContent>
             </Card>
           </div>
-
-          {/* Growth Comparison */}
-          <Card className="shadow-lg border-0">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-blue-600" />
-                    Year-over-Year Growth Analysis
-                  </CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">Quarterly performance vs targets and previous year</p>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className="text-green-600 border-green-200 bg-white">
-                    +15.2% Growth
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={salesGrowthData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="quarter" stroke="#666" />
-                  <YAxis stroke="#666" tickFormatter={(value) => `${(value/1000).toFixed(0)}k`} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar dataKey="lastYear" fill="#e5e7eb" name="Last Year" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="currentYear" fill="#3b82f6" name="Current Year" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="target" fill="#10b981" name="Target" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="forecasting" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Predictive Revenue Forecast */}
+            {/* Revenue Forecast */}
             <Card className="shadow-lg border-0">
               <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-100">
                 <div className="flex items-center justify-between">
@@ -464,7 +458,7 @@ const DynamicReports = () => {
                       <Activity className="h-5 w-5 text-orange-600" />
                       Revenue Forecast (AI Powered)
                     </CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">Machine learning predictions for next 6 months</p>
+                    <p className="text-sm text-gray-600 mt-1">Machine learning predictions for next {forecastPeriod} months</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Input
@@ -481,42 +475,30 @@ const DynamicReports = () => {
               </CardHeader>
               <CardContent className="p-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={predictiveData}>
+                  <LineChart data={revenueForecast}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="month" stroke="#666" />
                     <YAxis stroke="#666" tickFormatter={(value) => `${(value/1000000).toFixed(1)}M`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Line 
                       type="monotone" 
-                      dataKey="predicted" 
+                      dataKey="predictedRevenue" 
                       stroke="#f59e0b" 
                       strokeWidth={3}
                       strokeDasharray="5 5"
                       name="Predicted Revenue"
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="confidence" 
-                      stroke="#10b981" 
-                      strokeWidth={2}
-                      name="Confidence %"
-                    />
+                    {revenueForecast.length > 0 && revenueForecast[0].confidence && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="confidence" 
+                        stroke="#10b981" 
+                        strokeWidth={2}
+                        name="Confidence %"
+                      />
+                    )}
                   </LineChart>
                 </ResponsiveContainer>
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">Predicted Growth</p>
-                    <p className="text-lg font-bold text-green-600">+12.5%</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">Avg Confidence</p>
-                    <p className="text-lg font-bold text-blue-600">89%</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">Risk Level</p>
-                    <p className="text-lg font-bold text-yellow-600">Low</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
@@ -533,41 +515,42 @@ const DynamicReports = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm text-gray-600">15 items need attention</span>
+                    <span className="text-sm text-gray-600">{inventoryHealth.filter(i => i.status === 'low').length} items need attention</span>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {inventoryHealth.map((item, index) => (
+                  {processedInventoryHealth.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full ${
-                          item.category === 'Healthy Stock' ? 'bg-green-500' :
-                          item.category === 'Low Stock' ? 'bg-yellow-500' :
-                          item.category === 'Overstock' ? 'bg-blue-500' : 'bg-red-500'
+                          item.category === 'Healthy' ? 'bg-green-500' :
+                          item.category === 'Low' ? 'bg-yellow-500' : 'bg-red-500'
                         }`}></div>
-                        <span className="font-medium">{item.category}</span>
+                        <span className="font-medium">{item.category} Stock</span>
                       </div>
                       <div className="text-right">
                         <p className="font-bold">{item.count} items</p>
-                        <p className="text-sm text-gray-600">{formatCurrency(item.value)}</p>
+                        <p className="text-sm text-gray-600">{item.percentage}%</p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-6">
-                  <ResponsiveContainer width="100%" height={150}>
-                    <RadialBarChart cx="50%" cy="50%" innerRadius="40%" outerRadius="90%" data={inventoryHealth}>
-                      <RadialBar 
-                        dataKey="percentage" 
-                        cornerRadius={10} 
-                        fill="#8884d8"
-                      />
-                      <Tooltip content={<CustomTooltip />} />
-                    </RadialBarChart>
-                  </ResponsiveContainer>
-                </div>
+                {processedInventoryHealth.length > 0 && (
+                  <div className="mt-6">
+                    <ResponsiveContainer width="100%" height={150}>
+                      <RadialBarChart cx="50%" cy="50%" innerRadius="40%" outerRadius="90%" data={processedInventoryHealth}>
+                        <RadialBar 
+                          dataKey="percentage" 
+                          cornerRadius={10} 
+                          fill="#8884d8"
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                      </RadialBarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -576,136 +559,127 @@ const DynamicReports = () => {
         <TabsContent value="performance" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* KPI Cards */}
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">Revenue per Customer</p>
-                    <p className="text-2xl font-bold">{formatCurrency(dashboardStats?.customers?.avgCustomerValue || 0)}</p>
-                    <p className="text-xs opacity-75">+8.2% vs last month</p>
-                  </div>
-                  <DollarSign className="h-8 w-8 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
+            {kpiMetrics && (
+              <>
+                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm opacity-90">Total Revenue</p>
+                        <p className="text-2xl font-bold">{formatCurrency(kpiMetrics.revenue)}</p>
+                        <p className="text-xs opacity-75">+{kpiMetrics.revenueGrowth}% vs last period</p>
+                      </div>
+                      <DollarSign className="h-8 w-8 opacity-80" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">Inventory Turnover</p>
-                    <p className="text-2xl font-bold">{dashboardStats?.inventory?.inventoryTurnover || 0}x</p>
-                    <p className="text-xs opacity-75">Above industry avg</p>
-                  </div>
-                  <Activity className="h-8 w-8 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
+                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm opacity-90">Sales Count</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.salesCount}</p>
+                        <p className="text-xs opacity-75">+{kpiMetrics.salesGrowth}% growth</p>
+                      </div>
+                      <Activity className="h-8 w-8 opacity-80" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">Customer Retention</p>
-                    <p className="text-2xl font-bold">92.5%</p>
-                    <p className="text-xs opacity-75">+2.1% improvement</p>
-                  </div>
-                  <Users className="h-8 w-8 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
+            {performanceScorecard && (
+              <>
+                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm opacity-90">Sales Performance</p>
+                        <p className="text-2xl font-bold">{performanceScorecard.salesPerformance}%</p>
+                        <p className="text-xs opacity-75">Performance score</p>
+                      </div>
+                      <Users className="h-8 w-8 opacity-80" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">Order Fulfillment</p>
-                    <p className="text-2xl font-bold">98.7%</p>
-                    <p className="text-xs opacity-75">On-time delivery</p>
-                  </div>
-                  <Clock className="h-8 w-8 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
+                <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm opacity-90">Customer Satisfaction</p>
+                        <p className="text-2xl font-bold">{performanceScorecard.customerSatisfaction}%</p>
+                        <p className="text-xs opacity-75">Satisfaction rate</p>
+                      </div>
+                      <Clock className="h-8 w-8 opacity-80" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
 
           {/* Performance Scorecard */}
-          <Card className="shadow-lg border-0">
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-100">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Target className="h-5 w-5 text-indigo-600" />
-                Business Performance Scorecard
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Financial Metrics</h4>
-                  <div className="space-y-3">
+          {performanceScorecard && (
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-100">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Target className="h-5 w-5 text-indigo-600" />
+                  Business Performance Scorecard
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Sales Performance</h4>
                     <div className="flex justify-between items-center">
-                      <span>Gross Profit Margin</span>
+                      <span>Performance Score</span>
                       <div className="flex items-center gap-2">
                         <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div className="bg-green-500 h-2 rounded-full" style={{width: '70%'}}></div>
+                          <div 
+                            className="bg-green-500 h-2 rounded-full" 
+                            style={{width: `${performanceScorecard.salesPerformance}%`}}
+                          ></div>
                         </div>
-                        <span className="text-sm font-medium">70%</span>
+                        <span className="text-sm font-medium">{performanceScorecard.salesPerformance}%</span>
                       </div>
                     </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Customer Satisfaction</h4>
                     <div className="flex justify-between items-center">
-                      <span>Net Profit Margin</span>
+                      <span>Satisfaction Rate</span>
                       <div className="flex items-center gap-2">
                         <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-500 h-2 rounded-full" style={{width: '40%'}}></div>
+                          <div 
+                            className="bg-blue-500 h-2 rounded-full" 
+                            style={{width: `${performanceScorecard.customerSatisfaction}%`}}
+                          ></div>
                         </div>
-                        <span className="text-sm font-medium">40%</span>
+                        <span className="text-sm font-medium">{performanceScorecard.customerSatisfaction}%</span>
                       </div>
                     </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Inventory Efficiency</h4>
                     <div className="flex justify-between items-center">
-                      <span>ROI</span>
+                      <span>Efficiency Score</span>
                       <div className="flex items-center gap-2">
                         <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div className="bg-purple-500 h-2 rounded-full" style={{width: '85%'}}></div>
+                          <div 
+                            className="bg-purple-500 h-2 rounded-full" 
+                            style={{width: `${performanceScorecard.inventoryEfficiency}%`}}
+                          ></div>
                         </div>
-                        <span className="text-sm font-medium">85%</span>
+                        <span className="text-sm font-medium">{performanceScorecard.inventoryEfficiency}%</span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Operational Metrics</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span>Order Processing Time</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div className="bg-green-500 h-2 rounded-full" style={{width: '90%'}}></div>
-                        </div>
-                        <span className="text-sm font-medium">90%</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Inventory Accuracy</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-500 h-2 rounded-full" style={{width: '95%'}}></div>
-                        </div>
-                        <span className="text-sm font-medium">95%</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Customer Satisfaction</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div className="bg-yellow-500 h-2 rounded-full" style={{width: '88%'}}></div>
-                        </div>
-                        <span className="text-sm font-medium">88%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="strategic" className="space-y-6">
@@ -726,18 +700,24 @@ const DynamicReports = () => {
                       Growth Opportunities
                     </h4>
                     <div className="space-y-3">
-                      <div className="p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
-                        <p className="font-medium text-green-800">Expand UV Sheets Category</p>
-                        <p className="text-sm text-green-600">34% profit margin, high demand growth</p>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                        <p className="font-medium text-blue-800">B2B Customer Focus</p>
-                        <p className="text-sm text-blue-600">61% of revenue, 2.3x avg order value</p>
-                      </div>
-                      <div className="p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
-                        <p className="font-medium text-purple-800">Inventory Optimization</p>
-                        <p className="text-sm text-purple-600">Reduce dead stock by 15%</p>
-                      </div>
+                      {growthOpportunities.map((opportunity) => (
+                        <div key={opportunity.id} className={`p-3 rounded-lg border-l-4 ${
+                          opportunity.potential === 'high' ? 'bg-green-50 border-green-500' :
+                          opportunity.potential === 'medium' ? 'bg-blue-50 border-blue-500' :
+                          'bg-yellow-50 border-yellow-500'
+                        }`}>
+                          <p className={`font-medium ${
+                            opportunity.potential === 'high' ? 'text-green-800' :
+                            opportunity.potential === 'medium' ? 'text-blue-800' :
+                            'text-yellow-800'
+                          }`}>{opportunity.description}</p>
+                          <p className={`text-sm ${
+                            opportunity.potential === 'high' ? 'text-green-600' :
+                            opportunity.potential === 'medium' ? 'text-blue-600' :
+                            'text-yellow-600'
+                          }`}>Potential: {opportunity.potential}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -746,18 +726,24 @@ const DynamicReports = () => {
                       Risk Factors
                     </h4>
                     <div className="space-y-3">
-                      <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
-                        <p className="font-medium text-red-800">High Customer Concentration</p>
-                        <p className="text-sm text-red-600">Top 10 customers = 45% of revenue</p>
-                      </div>
-                      <div className="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
-                        <p className="font-medium text-yellow-800">Seasonal Volatility</p>
-                        <p className="text-sm text-yellow-600">Q4 sales 40% below average</p>
-                      </div>
-                      <div className="p-3 bg-orange-50 rounded-lg border-l-4 border-orange-500">
-                        <p className="font-medium text-orange-800">Overstock Risk</p>
-                        <p className="text-sm text-orange-600">8 products above max stock levels</p>
-                      </div>
+                      {riskFactors.map((risk) => (
+                        <div key={risk.id} className={`p-3 rounded-lg border-l-4 ${
+                          risk.severity === 'high' ? 'bg-red-50 border-red-500' :
+                          risk.severity === 'medium' ? 'bg-yellow-50 border-yellow-500' :
+                          'bg-gray-50 border-gray-500'
+                        }`}>
+                          <p className={`font-medium ${
+                            risk.severity === 'high' ? 'text-red-800' :
+                            risk.severity === 'medium' ? 'text-yellow-800' :
+                            'text-gray-800'
+                          }`}>{risk.description}</p>
+                          <p className={`text-sm ${
+                            risk.severity === 'high' ? 'text-red-600' :
+                            risk.severity === 'medium' ? 'text-yellow-600' :
+                            'text-gray-600'
+                          }`}>Severity: {risk.severity}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -794,10 +780,6 @@ const DynamicReports = () => {
                     Generate Full Report
                   </Button>
                 </div>
-                <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                  <h5 className="font-semibold text-blue-900 mb-2">AI Recommendations</h5>
-                  <p className="text-sm text-blue-700">Based on current trends, consider increasing UV Sheets inventory by 25% for next quarter.</p>
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -813,54 +795,45 @@ const DynamicReports = () => {
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Short Term (1-3 months)</h4>
+                  <h4 className="font-semibold text-gray-900">High Priority Items</h4>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Implement automated reorder points</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" checked />
-                      <span className="text-sm line-through">Review supplier contracts</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Launch customer loyalty program</span>
-                    </div>
+                    {actionItems.filter(item => item.priority === 'high').map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <input type="checkbox" className="rounded" />
+                        <div className="flex-1">
+                          <span className="text-sm font-medium">{item.description}</span>
+                          <p className="text-xs text-gray-600">Due: {new Date(item.dueDate).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Medium Term (3-6 months)</h4>
+                  <h4 className="font-semibold text-gray-900">Medium Priority Items</h4>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Expand into new product categories</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Implement CRM system</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Optimize warehouse layout</span>
-                    </div>
+                    {actionItems.filter(item => item.priority === 'medium').map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <input type="checkbox" className="rounded" />
+                        <div className="flex-1">
+                          <span className="text-sm font-medium">{item.description}</span>
+                          <p className="text-xs text-gray-600">Due: {new Date(item.dueDate).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Long Term (6+ months)</h4>
+                  <h4 className="font-semibold text-gray-900">Long Term Goals</h4>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Open second location</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Develop e-commerce platform</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">Implement AI demand forecasting</span>
-                    </div>
+                    {actionItems.filter(item => item.timeframe === 'long').map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <input type="checkbox" className="rounded" />
+                        <div className="flex-1">
+                          <span className="text-sm font-medium">{item.description}</span>
+                          <p className="text-xs text-gray-600">Due: {new Date(item.dueDate).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
