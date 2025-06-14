@@ -297,7 +297,7 @@ export const customerApi = {
     return customerApi.getCustomers({ limit: 1000 }).then(response => {
       if (response.success) {
         const customers = response.data.customers;
-        const mockData = generateMockCustomerData();
+        const mockInsights = generateMockCustomerData().insights;
         
         // Calculate real insights from customer data
         const totalCustomers = customers.length;
@@ -306,7 +306,7 @@ export const customerApi = {
         const individualCustomers = customers.filter(c => c.type === 'individual').length;
         
         const insights: CustomerInsights = {
-          ...mockData.insights,
+          ...mockInsights,
           totalCustomers,
           activeCustomers,
           topCustomers: customers
@@ -317,8 +317,8 @@ export const customerApi = {
             { type: 'Individual', count: individualCustomers, percentage: (individualCustomers / totalCustomers) * 100 }
           ],
           customersByStatus: [
-            { type: 'Active', count: activeCustomers, percentage: (activeCustomers / totalCustomers) * 100 },
-            { type: 'Inactive', count: totalCustomers - activeCustomers, percentage: ((totalCustomers - activeCustomers) / totalCustomers) * 100 }
+            { status: 'Active', count: activeCustomers, percentage: (activeCustomers / totalCustomers) * 100 },
+            { status: 'Inactive', count: totalCustomers - activeCustomers, percentage: ((totalCustomers - activeCustomers) / totalCustomers) * 100 }
           ],
           averageCustomerValue: customers.reduce((sum, c) => sum + c.totalPurchases, 0) / totalCustomers,
           totalReceivables: customers.reduce((sum, c) => sum + c.currentBalance, 0),
@@ -326,7 +326,7 @@ export const customerApi = {
         
         return { success: true, data: insights };
       }
-      return { success: true, data: mockData.insights };
+      return { success: true, data: generateMockCustomerData().insights };
     });
   },
 };
