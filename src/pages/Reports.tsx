@@ -93,7 +93,7 @@ const Reports = () => {
     {
       id: '1',
       type: 'ai',
-      content: "Hello! I'm your AI business assistant with real-time access to your sales, inventory, finances, and customer data. Ask me anything about your business performance or get strategic recommendations.",
+      content: "Assalam-o-Alaikum! I'm Nexus AI, your friendly business assistant. I can help you with business insights, analytics, and general conversation. How can I assist you today?",
       timestamp: new Date()
     }
   ]);
@@ -314,17 +314,50 @@ RESPONSE FORMAT REQUIREMENTS:
   };
 
   const sendMessageToGemini = async (userMessage: string) => {
-    if (!enhancedStats?.data) {
-      throw new Error('Business data not available');
-    }
-
-    const businessContext = generateBusinessContext(enhancedStats.data);
+    const needsBusinessContext = isBusinessQuery(userMessage);
     
-    const prompt = `${businessContext}
+    let prompt = '';
+    
+    if (needsBusinessContext && enhancedStats?.data) {
+      const businessContext = generateBusinessContext(enhancedStats.data);
+      prompt = `${businessContext}
+
+RESPONSE FORMAT REQUIREMENTS:
+- Please format your response using proper headings with ** for main sections
+- Use bullet points (*) for lists and recommendations
+- Use numbered lists (1., 2., 3.) for step-by-step instructions
+- Keep responses well-structured and easy to read
+- Use bold text (**text**) for important numbers or key points
+- Provide helpful, actionable insights and recommendations based on this current business data
+- Keep responses conversational and easy to understand for business owners
+- Use Pakistani Rupees (PKR) for all currency references
 
 USER QUESTION: ${userMessage}
 
-Please provide a helpful, well-formatted response based on the current business data above. Use the formatting guidelines specified in the context to make your response clear and professional.`;
+Please provide a helpful, well-formatted response based on the current business data above.`;
+    } else {
+      // For general conversation, create a friendly AI persona without business context
+      prompt = `You are Nexus AI, a friendly and intelligent business assistant. You can have casual conversations and also help with business insights when needed. 
+
+PERSONALITY TRAITS:
+- You are warm, friendly, and conversational
+- You understand Urdu/English cultural context (Pakistan)
+- You can discuss general topics like technology, current events, advice, etc.
+- You're helpful and supportive
+- You can be professional when discussing business but casual for general chat
+- You understand Islamic greetings like "Assalam-o-Alaikum" and respond appropriately
+
+RESPONSE GUIDELINES:
+- For greetings like "Salam", "Hello", "Hi" - respond warmly without business data
+- For general conversation - be engaging and helpful
+- Only mention business capabilities if directly asked
+- Keep responses conversational and friendly
+- Use appropriate cultural context for Pakistani business environment
+
+USER MESSAGE: ${userMessage}
+
+Please respond naturally and conversationally. Only include business information if specifically requested.`;
+    }
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -338,9 +371,9 @@ Please provide a helpful, well-formatted response based on the current business 
           }]
         }],
         generationConfig: {
-          temperature: 0.7,
+          temperature: needsBusinessContext ? 0.7 : 0.8,
           topP: 0.8,
-          maxOutputTokens: 1024,
+          maxOutputTokens: needsBusinessContext ? 1024 : 512,
         }
       }),
     });
@@ -499,6 +532,18 @@ Please provide a helpful, well-formatted response based on the current business 
     }
   };
 
+  const isBusinessQuery = (message: string) => {
+    const businessKeywords = [
+      'sales', 'revenue', 'profit', 'inventory', 'stock', 'customers', 'orders', 'business',
+      'financial', 'cash flow', 'expenses', 'income', 'analytics', 'performance', 'growth',
+      'dashboard', 'stats', 'statistics', 'report', 'analysis', 'trends', 'kpi', 'metrics',
+      'turnover', 'margin', 'receivables', 'products', 'company', 'operations'
+    ];
+    
+    const lowerMessage = message.toLowerCase();
+    return businessKeywords.some(keyword => lowerMessage.includes(keyword));
+  };
+
   if (statsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-screen bg-background">
@@ -531,7 +576,7 @@ Please provide a helpful, well-formatted response based on the current business 
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">Nexus AI</h1>
-                <p className="text-xs text-muted-foreground">Business Intelligence Assistant</p>
+                <p className="text-xs text-muted-foreground">Your Friendly Assistant</p>
               </div>
             </div>
           </div>
@@ -544,7 +589,7 @@ Please provide a helpful, well-formatted response based on the current business 
               </Badge>
               <Badge variant="secondary" className="h-6 text-xs">
                 <Zap className="w-3 h-3 mr-1" />
-                Real-time
+                Smart Mode
               </Badge>
             </div>
             
@@ -643,7 +688,7 @@ Please provide a helpful, well-formatted response based on the current business 
                         <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
                         <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
-                      <span className="text-muted-foreground text-xs">AI is analyzing...</span>
+                      <span className="text-muted-foreground text-xs">AI is thinking...</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -657,14 +702,14 @@ Please provide a helpful, well-formatted response based on the current business 
       {/* Input Area */}
       <div className="border-t bg-card shadow-sm">
         <div className="max-w-4xl mx-auto p-4">
-          {/* Quick Action Chips - Only show if less than 3 messages */}
+          {/* Updated Quick Action Chips */}
           {messages.length <= 2 && (
             <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
               {[
-                "Show today's sales performance",
-                "Top selling products?",
-                "Cash flow analysis",
-                "Revenue forecast"
+                "How are you today?",
+                "Tell me about today's sales",
+                "What's the weather like?",
+                "Show business analytics"
               ].map((suggestion, index) => (
                 <Button
                   key={index}
@@ -683,7 +728,7 @@ Please provide a helpful, well-formatted response based on the current business 
           <div className="flex gap-3 items-end">
             <div className="flex-1 relative">
               <Input
-                placeholder="Ask about your business performance, trends, or get strategic insights..."
+                placeholder="Ask me anything - business insights, general chat, or just say hello!"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
