@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { 
   MessageCircle, 
   Send, 
@@ -22,7 +24,9 @@ import {
   Stars,
   Wand2,
   Circle,
-  Play
+  Play,
+  Languages,
+  Speaker
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -101,6 +105,8 @@ const Reports = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState<'en-US' | 'ur-PK'>('en-US');
+  const [autoSpeak, setAutoSpeak] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -124,7 +130,7 @@ const Reports = () => {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.lang = currentLanguage;
 
       recognitionRef.current.onstart = () => {
         console.log('Speech recognition started');
@@ -142,7 +148,9 @@ const Reports = () => {
         setIsListening(false);
         toast({
           title: "Voice Input Error",
-          description: "Could not capture voice input. Please try again.",
+          description: currentLanguage === 'ur-PK' 
+            ? "آواز کی ان پٹ کیپچر نہیں کر سکا۔ برائے کرم دوبارہ کوشش کریں۔"
+            : "Could not capture voice input. Please try again.",
           variant: "destructive",
         });
       };
@@ -165,7 +173,14 @@ const Reports = () => {
         synthRef.current.cancel();
       }
     };
-  }, [toast]);
+  }, [toast, currentLanguage]);
+
+  // Update speech recognition language when language changes
+  useEffect(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = currentLanguage;
+    }
+  }, [currentLanguage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -260,7 +275,49 @@ const Reports = () => {
   const generateBusinessContext = (businessData: EnhancedStats) => {
     const currentDate = new Date().toLocaleDateString();
     
-    return `
+    const contextInUrdu = `
+BUSINESS CONTEXT & CURRENT DATA (بزنس ڈیٹا - ${currentDate} تک):
+
+FINANCIAL OVERVIEW (مالی خلاصہ):
+- آج کی آمدنی: ${formatCurrency(businessData.financial?.todayRevenue || 0)}
+- ماہانہ آمدنی: ${formatCurrency(businessData.financial?.monthRevenue || 0)}
+- خالص منافع: ${formatCurrency(businessData.financial?.netProfit || 0)}
+- مجموعی منافع: ${formatCurrency(businessData.financial?.grossProfit || 0)}
+- ماہانہ اخراجات: ${formatCurrency(businessData.financial?.monthExpenses || 0)}
+- منافع کا فیصد: ${businessData.financial?.profitMargin || 0}%
+- آمدنی میں اضافہ: ${businessData.financial?.revenueGrowth || 0}%
+
+SALES PERFORMANCE (سیلز کی کارکردگی):
+- آج کی سیلز: ${businessData.sales?.todaySales || 0} آرڈرز
+- ہفتہ وار سیلز: ${businessData.sales?.weekSales || 0} آرڈرز
+- اوسط آرڈر ویلیو: ${formatCurrency(businessData.sales?.avgOrderValue || 0)}
+- حالیہ بڑی سیلز: ${businessData.sales?.highValueSales?.slice(0, 3).map(s => `${formatCurrency(s.amount)} from ${s.customer}`).join(', ') || 'کوئی حالیہ بڑی سیلز نہیں'}
+
+INVENTORY STATUS (انوینٹری کی صورتحال):
+- کل انوینٹری ویلیو: ${formatCurrency(businessData.inventory?.totalInventoryValue || 0)}
+- کم اسٹاک آئٹمز: ${businessData.inventory?.lowStockItems || 0} پروڈکٹس توجہ چاہتے ہیں
+- ڈیڈ اسٹاک ویلیو: ${formatCurrency(businessData.inventory?.deadStockValue || 0)}
+- انوینٹری ٹرن اوور: ${businessData.inventory?.inventoryTurnover || 0}
+- تیز فروخت ہونے والے پروڈکٹس: ${businessData.inventory?.fastMovingProducts?.slice(0, 3).map(p => `${p.name} (${p.sold} بکا، ${p.remaining} باقی)`).join(', ') || 'کوئی تیز فروخت ہونے والے پروڈکٹس کا ڈیٹا نہیں'}
+
+CUSTOMER INSIGHTS (کسٹمر کی معلومات):
+- کل کسٹمرز: ${businessData.customers?.totalCustomers || 0}
+- اس مہینے نئے کسٹمرز: ${businessData.customers?.newCustomersThisMonth || 0}
+- اوسط کسٹمر ویلیو: ${formatCurrency(businessData.customers?.avgCustomerValue || 0)}
+- باقی وصولیاں: ${formatCurrency(businessData.customers?.totalReceivables || 0)}
+
+CASH FLOW (کیش فلو):
+- خالص کیش فلو: ${formatCurrency(businessData.cashFlow?.netCashFlow || 0)}
+- ماہانہ آمد: ${formatCurrency(businessData.cashFlow?.monthlyInflows || 0)}
+- ماہانہ اخراج: ${formatCurrency(businessData.cashFlow?.monthlyOutflows || 0)}
+
+ALERTS & CRITICAL ISSUES (الرٹس اور اہم مسائل):
+${businessData.alerts?.map(alert => `- ${alert.title}: ${alert.message}`).join('\n') || 'کوئی اہم الرٹس نہیں'}
+
+BUSINESS TYPE: یہ لکڑی کے پروڈکٹس، شیٹس، اور تعمیراتی مواد کا کاروبار لگتا ہے (MDF, HDX, KMI, ZRK سیریز پروڈکٹس کی بنیاد پر)۔
+`;
+
+    const contextInEnglish = `
 BUSINESS CONTEXT & CURRENT DATA (as of ${currentDate}):
 
 FINANCIAL OVERVIEW:
@@ -270,7 +327,7 @@ FINANCIAL OVERVIEW:
 - Gross Profit: ${formatCurrency(businessData.financial?.grossProfit || 0)}
 - Monthly Expenses: ${formatCurrency(businessData.financial?.monthExpenses || 0)}
 - Profit Margin: ${businessData.financial?.profitMargin || 0}%
-- Revenue Growth: ${businessData.financial?.revenueGrowth || 0}%
+- Revenue Growth: ${formatCurrency(businessData.financial?.revenueGrowth || 0)}%
 
 SALES PERFORMANCE:
 - Today's Sales: ${businessData.sales?.todaySales || 0} orders
@@ -300,17 +357,9 @@ ALERTS & CRITICAL ISSUES:
 ${businessData.alerts?.map(alert => `- ${alert.title}: ${alert.message}`).join('\n') || 'No critical alerts'}
 
 BUSINESS TYPE: This appears to be a manufacturing/trading business dealing with wood products, sheets, and building materials based on the product names (MDF, HDX, KMI, ZRK series products).
-
-RESPONSE FORMAT REQUIREMENTS:
-- Please format your response using proper headings with ** for main sections
-- Use bullet points (*) for lists and recommendations
-- Use numbered lists (1., 2., 3.) for step-by-step instructions
-- Keep responses well-structured and easy to read
-- Use bold text (**text**) for important numbers or key points
-- Provide helpful, actionable insights and recommendations based on this current business data
-- Keep responses conversational and easy to understand for business owners
-- Use Pakistani Rupees (PKR) for all currency references
 `;
+
+    return currentLanguage === 'ur-PK' ? contextInUrdu : contextInEnglish;
   };
 
   const sendMessageToGemini = async (userMessage: string) => {
@@ -320,7 +369,11 @@ RESPONSE FORMAT REQUIREMENTS:
     
     if (needsBusinessContext && enhancedStats?.data) {
       const businessContext = generateBusinessContext(enhancedStats.data);
+      const responseLanguage = currentLanguage === 'ur-PK' ? 'Urdu (اردو)' : 'English';
+      
       prompt = `${businessContext}
+
+RESPONSE LANGUAGE: Please respond in ${responseLanguage}
 
 RESPONSE FORMAT REQUIREMENTS:
 - Please format your response using proper headings with ** for main sections
@@ -331,13 +384,35 @@ RESPONSE FORMAT REQUIREMENTS:
 - Provide helpful, actionable insights and recommendations based on this current business data
 - Keep responses conversational and easy to understand for business owners
 - Use Pakistani Rupees (PKR) for all currency references
+${currentLanguage === 'ur-PK' ? '- اردو میں جواب دیں اور مہذب انداز استعمال کریں' : ''}
 
 USER QUESTION: ${userMessage}
 
 Please provide a helpful, well-formatted response based on the current business data above.`;
     } else {
       // For general conversation, create a friendly AI persona without business context
-      prompt = `You are Nexus AI, a friendly and intelligent business assistant. You can have casual conversations and also help with business insights when needed. 
+      const personalityInUrdu = `آپ Nexus AI ہیں، ایک دوستانہ اور ذہین کاروباری معاون۔ آپ عام گفتگو کر سکتے ہیں اور ضرورت پڑنے پر کاروباری بصیرت میں بھی مدد کر سکتے ہیں۔
+
+شخصیت کی خصوصیات:
+- آپ گرم، دوستانہ، اور گفتگو کرنے والے ہیں
+- آپ اردو/انگلش ثقافتی سیاق (پاکستان) کو سمجھتے ہیں
+- آپ عام موضوعات جیسے ٹیکنالوجی، موجودہ واقعات، مشورے وغیرہ پر بات کر سکتے ہیں
+- آپ مددگار اور حمایتی ہیں
+- کاروبار پر بات کرتے وقت پیشہ ورانہ ہو سکتے ہیں لیکن عام چیٹ کے لیے غیر رسمی
+- آپ اسلامی سلام جیسے "السلام علیکم" کو سمجھتے ہیں اور مناسب جواب دیتے ہیں
+
+جواب کی رہنمائی:
+- "سلام"، "ہیلو"، "ہائی" جیسے سلام کے لیے - کاروباری ڈیٹا کے بغیر گرمجوشی سے جواب دیں
+- عام گفتگو کے لیے - دلچسپ اور مددگار بنیں
+- صرف اسی وقت کاروباری صلاحیات کا ذکر کریں جب براہ راست پوچھا جائے
+- جوابات میں گفتگو اور دوستانہ انداز رکھیں
+- پاکستانی کاروباری ماحول کے لیے مناسب ثقافتی سیاق استعمال کریں
+
+صارف کا پیغام: ${userMessage}
+
+برائے کرم قدرتی اور گفتگو کے انداز میں جواب دیں۔ صرف اسی وقت کاروباری معلومات شامل کریں جب خاص طور پر مانگی جائے۔`;
+
+      const personalityInEnglish = `You are Nexus AI, a friendly and intelligent business assistant. You can have casual conversations and also help with business insights when needed. 
 
 PERSONALITY TRAITS:
 - You are warm, friendly, and conversational
@@ -357,6 +432,8 @@ RESPONSE GUIDELINES:
 USER MESSAGE: ${userMessage}
 
 Please respond naturally and conversationally. Only include business information if specifically requested.`;
+
+      prompt = currentLanguage === 'ur-PK' ? personalityInUrdu : personalityInEnglish;
     }
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
@@ -383,7 +460,9 @@ Please respond naturally and conversationally. Only include business information
     }
 
     const result = await response.json();
-    return result.candidates?.[0]?.content?.parts?.[0]?.text || 'I apologize, but I couldn\'t generate a response at the moment. Please try again.';
+    return result.candidates?.[0]?.content?.parts?.[0]?.text || (currentLanguage === 'ur-PK' 
+      ? 'معذرت، لیکن میں اس وقت جواب نہیں دے سکا۔ برائے کرم دوبارہ کوشش کریں۔'
+      : 'I apologize, but I couldn\'t generate a response at the moment. Please try again.');
   };
 
   const handleSendMessage = async () => {
@@ -411,21 +490,32 @@ Please respond naturally and conversationally. Only include business information
       };
 
       setMessages(prev => [...prev, aiMessage]);
+
+      // Auto-speak if enabled
+      if (autoSpeak && !isSpeaking) {
+        setTimeout(() => {
+          speakText(aiResponse);
+        }, 500);
+      }
     } catch (error) {
       console.error('Error sending message to AI:', error);
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: "I apologize, but I'm having trouble accessing the information right now. Please check your connection and try again.",
+        content: currentLanguage === 'ur-PK' 
+          ? "معذرت، لیکن میں اس وقت معلومات تک رسائی میں مسئلہ کا سامنا کر رہا ہوں۔ برائے کرم اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔"
+          : "I apologize, but I'm having trouble accessing the information right now. Please check your connection and try again.",
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, errorMessage]);
       
       toast({
-        title: "Error",
-        description: "Failed to get AI response. Please try again.",
+        title: currentLanguage === 'ur-PK' ? "خرابی" : "Error",
+        description: currentLanguage === 'ur-PK' 
+          ? "AI جواب حاصل کرنے میں ناکام۔ برائے کرم دوبارہ کوشش کریں۔"
+          : "Failed to get AI response. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -443,8 +533,10 @@ Please respond naturally and conversationally. Only include business information
   const toggleVoiceInput = () => {
     if (!recognitionRef.current) {
       toast({
-        title: "Voice Input Not Supported",
-        description: "Your browser doesn't support voice input feature.",
+        title: currentLanguage === 'ur-PK' ? "آواز کی ان پٹ سپورٹ نہیں" : "Voice Input Not Supported",
+        description: currentLanguage === 'ur-PK' 
+          ? "آپ کا براؤزر آواز کی ان پٹ فیچر کو سپورٹ نہیں کرتا۔"
+          : "Your browser doesn't support voice input feature.",
         variant: "destructive",
       });
       return;
@@ -457,8 +549,10 @@ Please respond naturally and conversationally. Only include business information
       recognitionRef.current.start();
       setIsListening(true);
       toast({
-        title: "Voice Input",
-        description: "Listening... Speak now!",
+        title: currentLanguage === 'ur-PK' ? "آواز کی ان پٹ" : "Voice Input",
+        description: currentLanguage === 'ur-PK' 
+          ? "سن رہا ہوں... اب بولیں!"
+          : "Listening... Speak now!",
       });
     }
   };
@@ -466,8 +560,10 @@ Please respond naturally and conversationally. Only include business information
   const speakText = (text: string) => {
     if (!synthRef.current) {
       toast({
-        title: "Text-to-Speech Not Supported",
-        description: "Your browser doesn't support text-to-speech feature.",
+        title: currentLanguage === 'ur-PK' ? "ٹیکسٹ ٹو اسپیچ سپورٹ نہیں" : "Text-to-Speech Not Supported",
+        description: currentLanguage === 'ur-PK' 
+          ? "آپ کا براؤزر ٹیکسٹ ٹو اسپیچ فیچر کو سپورٹ نہیں کرتا۔"
+          : "Your browser doesn't support text-to-speech feature.",
         variant: "destructive",
       });
       return;
@@ -487,6 +583,13 @@ Please respond naturally and conversationally. Only include business information
     utterance.pitch = 1;
     utterance.volume = 0.8;
 
+    // Set language for speech synthesis
+    if (currentLanguage === 'ur-PK') {
+      utterance.lang = 'ur-PK';
+    } else {
+      utterance.lang = 'en-US';
+    }
+
     utterance.onstart = () => {
       setIsSpeaking(true);
     };
@@ -498,8 +601,10 @@ Please respond naturally and conversationally. Only include business information
     utterance.onerror = () => {
       setIsSpeaking(false);
       toast({
-        title: "Speech Error",
-        description: "Failed to speak the text. Please try again.",
+        title: currentLanguage === 'ur-PK' ? "اسپیچ کی خرابی" : "Speech Error",
+        description: currentLanguage === 'ur-PK' 
+          ? "ٹیکسٹ بولنے میں ناکام۔ برائے کرم دوبارہ کوشش کریں۔"
+          : "Failed to speak the text. Please try again.",
         variant: "destructive",
       });
     };
@@ -507,29 +612,16 @@ Please respond naturally and conversationally. Only include business information
     synthRef.current.speak(utterance);
   };
 
-  const toggleSpeech = () => {
-    if (!synthRef.current) {
-      toast({
-        title: "Text-to-Speech Not Supported",
-        description: "Your browser doesn't support text-to-speech feature.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isSpeaking) {
-      synthRef.current.cancel();
-      setIsSpeaking(false);
-      toast({
-        title: "Voice Output",
-        description: "Speech stopped",
-      });
-    } else {
-      toast({
-        title: "Voice Output",
-        description: "Click the speak button next to any AI message to hear it",
-      });
-    }
+  const toggleLanguage = () => {
+    const newLanguage = currentLanguage === 'en-US' ? 'ur-PK' : 'en-US';
+    setCurrentLanguage(newLanguage);
+    
+    toast({
+      title: newLanguage === 'ur-PK' ? "زبان تبدیل کر دی گئی" : "Language Changed",
+      description: newLanguage === 'ur-PK' 
+        ? "اردو میں تبدیل کر دیا گیا"
+        : "Switched to English",
+    });
   };
 
   const isBusinessQuery = (message: string) => {
@@ -537,11 +629,15 @@ Please respond naturally and conversationally. Only include business information
       'sales', 'revenue', 'profit', 'inventory', 'stock', 'customers', 'orders', 'business',
       'financial', 'cash flow', 'expenses', 'income', 'analytics', 'performance', 'growth',
       'dashboard', 'stats', 'statistics', 'report', 'analysis', 'trends', 'kpi', 'metrics',
-      'turnover', 'margin', 'receivables', 'products', 'company', 'operations'
+      'turnover', 'margin', 'receivables', 'products', 'company', 'operations',
+      // Urdu keywords
+      'سیلز', 'آمدنی', 'منافع', 'انوینٹری', 'اسٹاک', 'کسٹمرز', 'آرڈرز', 'کاروبار',
+      'مالی', 'کیش فلو', 'اخراجات', 'آمد', 'تجزیات', 'کارکردگی', 'ترقی',
+      'ڈیش بورڈ', 'اعداد و شمار', 'رپورٹ', 'تجزیہ', 'رجحانات', 'پروڈکٹس', 'کمپنی'
     ];
     
     const lowerMessage = message.toLowerCase();
-    return businessKeywords.some(keyword => lowerMessage.includes(keyword));
+    return businessKeywords.some(keyword => lowerMessage.includes(keyword.toLowerCase()));
   };
 
   if (statsLoading) {
@@ -551,8 +647,12 @@ Please respond naturally and conversationally. Only include business information
           <div className="relative mb-6">
             <div className="w-12 h-12 border-2 border-muted border-t-primary rounded-full animate-spin mx-auto"></div>
           </div>
-          <p className="text-lg text-foreground font-medium">Initializing AI Assistant...</p>
-          <p className="text-xs text-muted-foreground mt-1">Loading business intelligence data</p>
+          <p className="text-lg text-foreground font-medium">
+            {currentLanguage === 'ur-PK' ? 'AI اسسٹنٹ شروع کر رہا ہے...' : 'Initializing AI Assistant...'}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {currentLanguage === 'ur-PK' ? 'بزنس انٹیلیجنس ڈیٹا لوڈ کر رہا ہے' : 'Loading business intelligence data'}
+          </p>
         </div>
       </div>
     );
@@ -576,7 +676,9 @@ Please respond naturally and conversationally. Only include business information
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">Nexus AI</h1>
-                <p className="text-xs text-muted-foreground">Your Friendly Assistant</p>
+                <p className="text-xs text-muted-foreground">
+                  {currentLanguage === 'ur-PK' ? 'آپ کا دوستانہ معاون' : 'Your Friendly Assistant'}
+                </p>
               </div>
             </div>
           </div>
@@ -585,19 +687,48 @@ Please respond naturally and conversationally. Only include business information
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="h-6 text-xs">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div>
-                Online
+                {currentLanguage === 'ur-PK' ? 'آن لائن' : 'Online'}
               </Badge>
               <Badge variant="secondary" className="h-6 text-xs">
                 <Zap className="w-3 h-3 mr-1" />
-                Smart Mode
+                {currentLanguage === 'ur-PK' ? 'اسمارٹ موڈ' : 'Smart Mode'}
               </Badge>
             </div>
             
             <div className="flex items-center gap-1">
+              {/* Auto Speak Toggle */}
+              <div className="flex items-center gap-2 px-2">
+                <Speaker className="h-3 w-3 text-muted-foreground" />
+                <Switch
+                  checked={autoSpeak}
+                  onCheckedChange={setAutoSpeak}
+                  className="scale-75"
+                />
+                <span className="text-xs text-muted-foreground">
+                  {currentLanguage === 'ur-PK' ? 'خودکار' : 'Auto'}
+                </span>
+              </div>
+              
+              {/* Language Toggle */}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={toggleSpeech}
+                onClick={toggleLanguage}
+                className="h-7 px-2 text-xs"
+              >
+                <Languages className="h-3 w-3 mr-1" />
+                {currentLanguage === 'ur-PK' ? 'اردو' : 'EN'}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (isSpeaking) {
+                    synthRef.current?.cancel();
+                    setIsSpeaking(false);
+                  }
+                }}
                 className={`h-7 w-7 p-0 ${isSpeaking ? 'bg-secondary' : ''}`}
               >
                 {isSpeaking ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
@@ -660,7 +791,10 @@ Please respond naturally and conversationally. Only include business information
                           disabled={isSpeaking}
                         >
                           <Play className="h-3 w-3 mr-1" />
-                          {isSpeaking ? 'Speaking...' : 'Speak'}
+                          {isSpeaking ? 
+                            (currentLanguage === 'ur-PK' ? 'بول رہا ہے...' : 'Speaking...') : 
+                            (currentLanguage === 'ur-PK' ? 'بولیں' : 'Speak')
+                          }
                         </Button>
                       )}
                     </div>
@@ -688,7 +822,9 @@ Please respond naturally and conversationally. Only include business information
                         <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
                         <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
-                      <span className="text-muted-foreground text-xs">AI is thinking...</span>
+                      <span className="text-muted-foreground text-xs">
+                        {currentLanguage === 'ur-PK' ? 'AI سوچ رہا ہے...' : 'AI is thinking...'}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -705,12 +841,17 @@ Please respond naturally and conversationally. Only include business information
           {/* Updated Quick Action Chips */}
           {messages.length <= 2 && (
             <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-              {[
+              {currentLanguage === 'ur-PK' ? [
+                "آج آپ کیسے ہیں؟",
+                "آج کی سیلز بتائیں",
+                "موسم کیسا ہے؟",
+                "بزنس ایگالیٹکس دکھائیں"
+              ] : [
                 "How are you today?",
                 "Tell me about today's sales",
                 "What's the weather like?",
                 "Show business analytics"
-              ].map((suggestion, index) => (
+              ]).map((suggestion, index) => (
                 <Button
                   key={index}
                   variant="outline"
@@ -728,7 +869,10 @@ Please respond naturally and conversationally. Only include business information
           <div className="flex gap-3 items-end">
             <div className="flex-1 relative">
               <Input
-                placeholder="Ask me anything - business insights, general chat, or just say hello!"
+                placeholder={currentLanguage === 'ur-PK' 
+                  ? "مجھ سے کچھ بھی پوچھیں - کاروبار کی معلومات، عام بات چیت، یا صرف سلام کہیں!"
+                  : "Ask me anything - business insights, general chat, or just say hello!"
+                }
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -754,7 +898,7 @@ Please respond naturally and conversationally. Only include business information
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  Send
+                  {currentLanguage === 'ur-PK' ? 'بھیجیں' : 'Send'}
                 </>
               )}
             </Button>
