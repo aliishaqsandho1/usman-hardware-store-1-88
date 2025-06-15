@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -841,7 +840,7 @@ Please respond naturally and conversationally. Only include business information
           {/* Updated Quick Action Chips */}
           {messages.length <= 2 && (
             <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-              {currentLanguage === 'ur-PK' ? [
+              {(currentLanguage === 'ur-PK' ? [
                 "آج آپ کیسے ہیں؟",
                 "آج کی سیلز بتائیں",
                 "موسم کیسا ہے؟",
