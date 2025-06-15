@@ -96,7 +96,7 @@ const Reports = () => {
     {
       id: '1',
       type: 'ai',
-      content: "Assalam-o-Alaikum Usman! I'm your business assistant for Usman Hardware. I can help you with business insights, analytics, and general conversation. How can I assist you today?",
+      content: "Assalam-o-Alaikum! I'm Nexus AI, your friendly business assistant. I can help you with business insights, analytics, and general conversation. How can I assist you today?",
       timestamp: new Date()
     }
   ]);
@@ -385,12 +385,33 @@ RESPONSE FORMAT REQUIREMENTS:
 - Use Pakistani Rupees (PKR) for all currency references
 ${currentLanguage === 'ur-PK' ? '- اردو میں جواب دیں اور مہذب انداز استعمال کریں' : ''}
 
-USER (Usman, Admin of Usman Hardware) QUESTION: ${userMessage}
+USER QUESTION: ${userMessage}
 
-Please provide a helpful, well-formatted response for Usman at Usman Hardware based on the current business data above.`;
+Please provide a helpful, well-formatted response based on the current business data above.`;
     } else {
       // For general conversation, create a friendly AI persona without business context
-      const personalityInUrdu = `آپ "Usman Hardware" کے اڈمن عثمان ہیں، اور آپکا معاون بھی یہی پیج ہے۔ آپ عام گفتگو کر سکتے ہیں اور ضرورت پڑنے پر کاروباری بصیرت میں بھی مدد کر سکتے ہیں۔
+      const personalityInUrdu = `آپ Nexus AI ہیں، ایک دوستانہ اور ذہین کاروباری معاون۔ آپ عام گفتگو کر سکتے ہیں اور ضرورت پڑنے پر کاروباری بصیرت میں بھی مدد کر سکتے ہیں۔
+
+شخصیت کی خصوصیات:
+- آپ گرم، دوستانہ، اور گفتگو کرنے والے ہیں
+- آپ اردو/انگلش ثقافتی سیاق (پاکستان) کو سمجھتے ہیں
+- آپ عام موضوعات جیسے ٹیکنالوجی، موجودہ واقعات، مشورے وغیرہ پر بات کر سکتے ہیں
+- آپ مددگار اور حمایتی ہیں
+- کاروبار پر بات کرتے وقت پیشہ ورانہ ہو سکتے ہیں لیکن عام چیٹ کے لیے غیر رسمی
+- آپ اسلامی سلام جیسے "السلام علیکم" کو سمجھتے ہیں اور مناسب جواب دیتے ہیں
+
+جواب کی رہنمائی:
+- "سلام"، "ہیلو"، "ہائی" جیسے سلام کے لیے - کاروباری ڈیٹا کے بغیر گرمجوشی سے جواب دیں
+- عام گفتگو کے لیے - دلچسپ اور مددگار بنیں
+- صرف اسی وقت کاروباری صلاحیات کا ذکر کریں جب براہ راست پوچھا جائے
+- جوابات میں گفتگو اور دوستانہ انداز رکھیں
+- پاکستانی کاروباری ماحول کے لیے مناسب ثقافتی سیاق استعمال کریں
+
+صارف کا پیغام: ${userMessage}
+
+برائے کرم قدرتی اور گفتگو کے انداز میں جواب دیں۔ صرف اسی وقت کاروباری معلومات شامل کریں جب خاص طور پر مانگی جائے۔`;
+
+      const personalityInEnglish = `You are Nexus AI, a friendly and intelligent business assistant. You can have casual conversations and also help with business insights when needed. 
 
 PERSONALITY TRAITS:
 - You are warm, friendly, and conversational
@@ -407,9 +428,9 @@ RESPONSE GUIDELINES:
 - Keep responses conversational and friendly
 - Use appropriate cultural context for Pakistani business environment
 
-USER (Usman, Admin of Usman Hardware) MESSAGE: ${userMessage}
+USER MESSAGE: ${userMessage}
 
-Please respond naturally and conversationally for Usman. Only include business information if specifically requested.`;
+Please respond naturally and conversationally. Only include business information if specifically requested.`;
 
       prompt = currentLanguage === 'ur-PK' ? personalityInUrdu : personalityInEnglish;
     }
@@ -653,11 +674,9 @@ Please respond naturally and conversationally for Usman. Only include business i
                 </div>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Usman</h1>
+                <h1 className="text-xl font-bold text-foreground">Nexus AI</h1>
                 <p className="text-xs text-muted-foreground">
-                  {currentLanguage === 'ur-PK'
-                    ? 'Usman Hardware - آپ کے کاروبار کا دوستانہ معاون'
-                    : 'Usman Hardware - Your Business Assistant'}
+                  {currentLanguage === 'ur-PK' ? 'آپ کا دوستانہ معاون' : 'Your Friendly Assistant'}
                 </p>
               </div>
             </div>
