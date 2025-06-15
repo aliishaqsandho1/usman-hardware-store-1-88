@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -749,7 +750,7 @@ Please respond naturally and conversationally. Only include business information
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="max-w-4xl mx-auto p-4 space-y-4 pb-20">
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
