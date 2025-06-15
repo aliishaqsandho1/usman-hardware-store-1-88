@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,116 +93,123 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   );
 
   return (
-    <div className="w-72 bg-card border-l border-border shadow-lg flex flex-col h-screen">
-      {/* Customer Section */}
-      <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-medium text-card-foreground flex items-center gap-2 text-sm">
-            <User className="h-4 w-4" />
-            Customer
-          </h3>
-        </div>
-        
-        {selectedCustomer ? (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 p-2 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-blue-900 dark:text-blue-200 text-sm">{selectedCustomer.name}</p>
-                <p className="text-xs text-blue-700 dark:text-blue-300">{selectedCustomer.phone}</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onSetSelectedCustomer(null)}
-                className="h-6 w-6 p-0"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 p-2 rounded-lg">
-            <p className="text-xs text-green-800 dark:text-green-200 mb-2 font-medium">Cash Sale (Walk-in Customer)</p>
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSetIsCustomerDialogOpen(true)}
-                className="flex-1 text-xs h-7 bg-background"
-              >
-                Search customer...
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSetIsQuickCustomerOpen(true)}
-                className="px-2 h-7 bg-background"
-              >
-                <UserPlus className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Payment Method Selection */}
-      <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-card-foreground flex items-center gap-2">
-            <CreditCard className="h-3 w-3" />
-            Payment Method
-          </Label>
-          <Select value={paymentMethod} onValueChange={onSetPaymentMethod}>
-            <SelectTrigger className="h-8 text-xs bg-background border-input">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cash">Cash</SelectItem>
-              <SelectItem value="credit">Credit</SelectItem>
-              <SelectItem value="card">Card</SelectItem>
-              <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Order Status Selection */}
-      <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-card-foreground">Order Status</Label>
-          <Select value={orderStatus} onValueChange={onSetOrderStatus}>
-            <SelectTrigger className="h-8 text-xs bg-background border-input">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Cart Section - SCROLLABLE AREA */}
+    <div
+      className="w-72 bg-card border-l border-border shadow-lg flex flex-col h-screen
+      fixed right-0 top-0 z-40
+      max-w-full
+      sm:relative sm:w-72 sm:max-w-xs
+      "
+      style={{
+        width: '100vw',
+        maxWidth: 380,
+      }}
+    >
       <div className="flex-1 min-h-0 flex flex-col bg-card">
-        <div className="p-3 border-b border-border flex-shrink-0">
-          <h3 className="font-medium text-card-foreground flex items-center gap-2 text-sm">
-            <ShoppingCart className="h-4 w-4" />
-            Cart ({cart.length})
-          </h3>
+        {/* Customer, Payment, Order Status */}
+        <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium text-card-foreground flex items-center gap-2 text-sm">
+              <User className="h-4 w-4" />
+              Customer
+            </h3>
+          </div>
+          
+          {selectedCustomer ? (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 p-2 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-900 dark:text-blue-200 text-sm">{selectedCustomer.name}</p>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">{selectedCustomer.phone}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onSetSelectedCustomer(null)}
+                  className="h-6 w-6 p-0"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 p-2 rounded-lg">
+              <p className="text-xs text-green-800 dark:text-green-200 mb-2 font-medium">Cash Sale (Walk-in Customer)</p>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSetIsCustomerDialogOpen(true)}
+                  className="flex-1 text-xs h-7 bg-background"
+                >
+                  Search customer...
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSetIsQuickCustomerOpen(true)}
+                  className="px-2 h-7 bg-background"
+                >
+                  <UserPlus className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-card-foreground flex items-center gap-2">
+              <CreditCard className="h-3 w-3" />
+              Payment Method
+            </Label>
+            <Select value={paymentMethod} onValueChange={onSetPaymentMethod}>
+              <SelectTrigger className="h-8 text-xs bg-background border-input">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="credit">Credit</SelectItem>
+                <SelectItem value="card">Card</SelectItem>
+                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-card-foreground">Order Status</Label>
+            <Select value={orderStatus} onValueChange={onSetOrderStatus}>
+              <SelectTrigger className="h-8 text-xs bg-background border-input">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {cart.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center py-8">
-              <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground text-sm">Cart is empty</p>
-            </div>
+        {/* Cart Section - SCROLLABLE AREA */}
+        {/* Add responsive overflow fixing */}
+        <div className="flex-1 min-h-0 flex flex-col bg-card custom-scrollbar overflow-y-auto max-h-[44vh] sm:max-h-full">
+          <div className="p-3 border-b border-border flex-shrink-0 sticky top-0 z-20 bg-card">
+            <h3 className="font-medium text-card-foreground flex items-center gap-2 text-sm">
+              <ShoppingCart className="h-4 w-4" />
+              Cart ({cart.length})
+            </h3>
           </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto p-3">
-            <div className="space-y-2 pb-4">
-              {cart.map((item) => (
+          {/* ... keep existing code for empty cart and map section ... */}
+          <div className="space-y-2 pb-4">
+            {cart.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center py-8">
+                  <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">Cart is empty</p>
+                </div>
+              </div>
+            ) : (
+              cart.map((item) => (
                 <div key={item.productId} className="bg-muted/50 border border-border p-2 rounded-lg">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
@@ -300,15 +306,16 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                     </p>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* FIXED CHECKOUT SECTION - ALWAYS VISIBLE */}
+      {/* On small screens, always show this at bottom, make background sticky above all other content */}
       {cart.length > 0 && (
-        <div className="p-3 border-t border-border bg-card flex-shrink-0">
+        <div className="p-3 border-t border-border bg-card flex-shrink-0 sticky bottom-0 z-50 w-full">
           <div className="space-y-2 mb-3">
             <div className="border-t border-border pt-2">
               <div className="flex justify-between font-bold">
