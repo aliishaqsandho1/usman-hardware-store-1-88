@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -126,12 +125,6 @@ const analyticsItems: MenuItem[] = [
     title: "Ask AI",
     url: "/reports",
     icon: MessageCircle,
-  },
-  {
-    title: "Sales Analytics",
-    url: "/sales-analytics",
-    icon: PieChart,
-    badge: "Pro"
   },
   {
     title: "Customer Insights",
