@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -168,8 +167,7 @@ const Finance = () => {
 
   if (loading) {
     return (
--      <div className="flex-1 p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-+      <div className="flex-1 p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
+      <div className="flex-1 p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
         <div className="flex items-center justify-center h-64">
           <div className="flex gap-3 items-center text-lg text-gray-500">
             <RefreshCw className="animate-spin h-6 w-6" />
@@ -182,8 +180,7 @@ const Finance = () => {
 
   if (!overview) {
     return (
--      <div className="flex-1 p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
-+      <div className="flex-1 p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
+      <div className="flex-1 p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
         <div className="flex items-center gap-4 mb-8">
           <SidebarTrigger />
           <div>
@@ -211,98 +208,55 @@ const Finance = () => {
   }
 
   return (
--    <div className="flex-1 p-4 md:p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
--      {/* Header */}
--      <div className="flex items-center justify-between">
--        <div className="flex items-center gap-4">
--          <SidebarTrigger />
--          <div>
--            <h1 className="text-3xl font-bold text-slate-900">Finance Dashboard</h1>
--            <div className="flex items-center gap-2 mt-1">
--              <p className="text-slate-600">Comprehensive financial overview and management</p>
--              {!apiConnected && (
--                <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
--                  Demo Data
--                </Badge>
--              )}
--            </div>
--          </div>
--        </div>
--        <div className="flex gap-3">
--          <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
--            <SelectTrigger className="w-32 bg-white shadow-sm">
--              <SelectValue />
--            </SelectTrigger>
--            <SelectContent>
--              <SelectItem value="today">Today</SelectItem>
--              <SelectItem value="week">This Week</SelectItem>
--              <SelectItem value="month">This Month</SelectItem>
--              <SelectItem value="year">This Year</SelectItem>
--            </SelectContent>
--          </Select>
--          <Button variant="outline" className="bg-white shadow-sm hover:bg-slate-50" onClick={fetchFinanceData}>
--            <RefreshCw className="h-4 w-4 mr-2" />
--            Refresh
--          </Button>
--          <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
--            <DialogTrigger asChild>
--              <Button className="bg-emerald-600 hover:bg-emerald-700 shadow-md">
--                <Plus className="h-4 w-4 mr-2" />
--                Record Payment
--              </Button>
--            </DialogTrigger>
--            <PaymentDialog onSubmit={handleRecordPayment} onClose={() => setIsPaymentDialogOpen(false)} />
--          </Dialog>
--        </div>
--      </div>
-+    <div className="flex-1 p-4 md:p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
-+      {/* Header and Actions: Now stacked responsively */}
-+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-+        <div className="flex items-center gap-4">
-+          <SidebarTrigger />
-+          <div>
-+            <h1 className="text-3xl font-bold text-slate-900">Finance Dashboard</h1>
-+            <div className="flex items-center gap-2 mt-1">
-+              <p className="text-slate-600">Comprehensive financial overview and management</p>
-+              {!apiConnected && (
-+                <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
-+                  Demo Data
-+                </Badge>
-+              )}
-+            </div>
-+          </div>
-+        </div>
-+        {/* Actions group: stack on mobile, inline on md+ */}
-+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-+          <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
-+            <SelectTrigger className="w-full sm:w-32 bg-white shadow-sm">
-+              <SelectValue />
-+            </SelectTrigger>
-+            <SelectContent>
-+              <SelectItem value="today">Today</SelectItem>
-+              <SelectItem value="week">This Week</SelectItem>
-+              <SelectItem value="month">This Month</SelectItem>
-+              <SelectItem value="year">This Year</SelectItem>
-+            </SelectContent>
-+          </Select>
-+          <Button variant="outline" className="bg-white shadow-sm hover:bg-slate-50 w-full sm:w-auto" onClick={fetchFinanceData}>
-+            <RefreshCw className="h-4 w-4 mr-2" />
-+            Refresh
-+          </Button>
-+          <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-+            <DialogTrigger asChild>
-+              <Button className="bg-emerald-600 hover:bg-emerald-700 shadow-md w-full sm:w-auto">
-+                <Plus className="h-4 w-4 mr-2" />
-+                Record Payment
-+              </Button>
-+            </DialogTrigger>
-+            <PaymentDialog onSubmit={handleRecordPayment} onClose={() => setIsPaymentDialogOpen(false)} />
-+          </Dialog>
-+        </div>
-+      </div>
+    <div className="flex-1 p-4 md:p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
+      {/* Header and Actions: Now stacked responsively */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <SidebarTrigger />
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Finance Dashboard</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-slate-600">Comprehensive financial overview and management</p>
+              {!apiConnected && (
+                <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+                  Demo Data
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* Actions group: stack on mobile, inline on md+ */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
+            <SelectTrigger className="w-full sm:w-32 bg-white shadow-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" className="bg-white shadow-sm hover:bg-slate-50 w-full sm:w-auto" onClick={fetchFinanceData}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 shadow-md w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Record Payment
+              </Button>
+            </DialogTrigger>
+            <PaymentDialog onSubmit={handleRecordPayment} onClose={() => setIsPaymentDialogOpen(false)} />
+          </Dialog>
+        </div>
+      </div>
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Revenue */}
         <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -317,7 +271,7 @@ const Finance = () => {
             </div>
           </CardContent>
         </Card>
-
+        {/* Profit */}
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -332,7 +286,7 @@ const Finance = () => {
             </div>
           </CardContent>
         </Card>
-
+        {/* Cash Flow */}
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -347,7 +301,7 @@ const Finance = () => {
             </div>
           </CardContent>
         </Card>
-
+        {/* Expenses */}
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -366,6 +320,7 @@ const Finance = () => {
 
       {/* Revenue Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Cash Revenue */}
         <Card className="bg-white shadow-lg border-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -379,7 +334,7 @@ const Finance = () => {
             </div>
           </CardContent>
         </Card>
-
+        {/* Credit Revenue */}
         <Card className="bg-white shadow-lg border-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -393,7 +348,7 @@ const Finance = () => {
             </div>
           </CardContent>
         </Card>
-
+        {/* Outstanding */}
         <Card className="bg-white shadow-lg border-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -445,7 +400,6 @@ const Finance = () => {
             </div>
           </CardContent>
         </Card>
-
         {/* Accounts Payable */}
         <Card className="bg-white shadow-lg border-0">
           <CardHeader className="pb-4">
@@ -510,7 +464,6 @@ const Finance = () => {
             </div>
           </CardContent>
         </Card>
-
         {/* Cash Flow */}
         <Card className="bg-white shadow-lg border-0">
           <CardHeader className="pb-4">
@@ -609,7 +562,6 @@ const PaymentDialog = ({ onSubmit, onClose }: { onSubmit: (data: any) => void; o
             />
           </div>
         </div>
-
         <div>
           <Label htmlFor="paymentMethod" className="text-sm font-medium">Payment Method</Label>
           <Select
@@ -626,7 +578,6 @@ const PaymentDialog = ({ onSubmit, onClose }: { onSubmit: (data: any) => void; o
             </SelectContent>
           </Select>
         </div>
-
         <div>
           <Label htmlFor="reference" className="text-sm font-medium">Reference</Label>
           <Input
@@ -637,7 +588,6 @@ const PaymentDialog = ({ onSubmit, onClose }: { onSubmit: (data: any) => void; o
             className="mt-1"
           />
         </div>
-
         <div>
           <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
           <Textarea
@@ -649,7 +599,6 @@ const PaymentDialog = ({ onSubmit, onClose }: { onSubmit: (data: any) => void; o
             className="mt-1"
           />
         </div>
-
         <div className="flex gap-3 pt-4">
           <Button
             type="submit"
