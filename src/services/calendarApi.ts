@@ -66,6 +66,7 @@ export const calendarApi = {
       return await apiRequest<CalendarResponse>(`/calendar/events${query ? `?${query}` : ''}`);
     } catch (error) {
       // Return fallback data when API is not available
+      console.log('Using fallback calendar data');
       return {
         success: true,
         data: {
@@ -102,6 +103,28 @@ export const calendarApi = {
               customerName: "Sheikh Gulzar Sahib",
               priority: "high",
               status: "scheduled"
+            },
+            {
+              id: 4,
+              title: "New Customer Meeting",
+              description: "Discuss bulk order requirements",
+              type: "meeting",
+              date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              time: "11:00 AM",
+              customerName: "Ali Hardware Store",
+              priority: "medium",
+              status: "scheduled"
+            },
+            {
+              id: 5,
+              title: "Supplier Call",
+              description: "Check on new inventory arrival",
+              type: "call",
+              date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              time: "9:30 AM",
+              customerName: "Pak Steel Suppliers",
+              priority: "low",
+              status: "scheduled"
             }
           ]
         }
@@ -111,11 +134,13 @@ export const calendarApi = {
 
   createEvent: async (event: Omit<CalendarEvent, 'id' | 'status'>) => {
     try {
+      console.log('Creating event:', event);
       return await apiRequest<{ success: boolean; data: CalendarEvent }>('/calendar/events', {
         method: 'POST',
         body: JSON.stringify(event),
       });
     } catch (error) {
+      console.log('API failed, creating local event:', event);
       return {
         success: true,
         data: {
