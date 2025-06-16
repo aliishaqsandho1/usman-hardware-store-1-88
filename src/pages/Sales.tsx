@@ -49,6 +49,7 @@ const Sales = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isCartCollapsed, setIsCartCollapsed] = useState(false);
 
   // Fullscreen toggle function
   const toggleFullscreen = () => {
@@ -895,7 +896,7 @@ const Sales = () => {
         </div>
       </div>
 
-      {/* Desktop Cart Sidebar */}
+      {/* Desktop Cart Sidebar - Now Toggleable */}
       <div className={`${isMobile ? 'hidden' : ''} flex-shrink-0`}>
         <CartSidebar
           cart={cart}
@@ -905,6 +906,7 @@ const Sales = () => {
           paymentMethod={paymentMethod}
           isCustomerDialogOpen={isCustomerDialogOpen}
           isQuickCustomerOpen={isQuickCustomerOpen}
+          isCollapsed={isCartCollapsed}
           onSetSelectedCustomer={setSelectedCustomer}
           onSetIsCustomerDialogOpen={setIsCustomerDialogOpen}
           onSetIsQuickCustomerOpen={setIsQuickCustomerOpen}
@@ -914,6 +916,7 @@ const Sales = () => {
           onRemoveFromCart={removeFromCart}
           onCheckout={handleCheckout}
           onUpdateItemPrice={updateItemPrice}
+          onToggleCollapse={() => setIsCartCollapsed(!isCartCollapsed)}
         />
       </div>
 
