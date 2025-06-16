@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -167,9 +168,9 @@ const Finance = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
+      <div className="flex-1 p-6 space-y-6 bg-background min-h-screen no-horizontal-scroll">
         <div className="flex items-center justify-center h-64">
-          <div className="flex gap-3 items-center text-lg text-gray-500">
+          <div className="flex gap-3 items-center text-lg text-muted-foreground">
             <RefreshCw className="animate-spin h-6 w-6" />
             Loading finance data...
           </div>
@@ -180,21 +181,21 @@ const Finance = () => {
 
   if (!overview) {
     return (
-      <div className="flex-1 p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
+      <div className="flex-1 p-6 space-y-6 bg-background min-h-screen no-horizontal-scroll">
         <div className="flex items-center gap-4 mb-8">
           <SidebarTrigger />
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Finance Dashboard</h1>
-            <p className="text-slate-600">Comprehensive financial overview and management</p>
+            <h1 className="text-3xl font-bold text-foreground">Finance Dashboard</h1>
+            <p className="text-muted-foreground">Comprehensive financial overview and management</p>
           </div>
         </div>
-        <Card className="bg-white shadow-lg border-0">
+        <Card className="bg-card shadow-lg border-0">
           <CardContent className="p-12 text-center">
-            <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Database className="h-8 w-8 text-orange-600" />
+            <div className="bg-orange-100 dark:bg-orange-900 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Database className="h-8 w-8 text-orange-600 dark:text-orange-400" />
             </div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">API Connection Issue</h3>
-            <p className="text-slate-600 mb-4">
+            <h3 className="text-xl font-semibold text-foreground mb-2">API Connection Issue</h3>
+            <p className="text-muted-foreground mb-4">
               Unable to connect to the finance API. The demo data is being shown instead.
             </p>
             <Button onClick={fetchFinanceData} className="bg-blue-600 hover:bg-blue-700">
@@ -208,17 +209,17 @@ const Finance = () => {
   }
 
   return (
-    <div className="flex-1 p-4 md:p-6 space-y-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen no-horizontal-scroll">
+    <div className="flex-1 p-4 md:p-6 space-y-6 bg-background min-h-screen no-horizontal-scroll">
       {/* Header and Actions: Now stacked responsively */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Finance Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground">Finance Dashboard</h1>
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-slate-600">Comprehensive financial overview and management</p>
+              <p className="text-muted-foreground">Comprehensive financial overview and management</p>
               {!apiConnected && (
-                <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+                <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:bg-orange-950">
                   Demo Data
                 </Badge>
               )}
@@ -228,7 +229,7 @@ const Finance = () => {
         {/* Actions group: stack on mobile, inline on md+ */}
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
-            <SelectTrigger className="w-full sm:w-32 bg-white shadow-sm">
+            <SelectTrigger className="w-full sm:w-32 bg-card shadow-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -238,7 +239,7 @@ const Finance = () => {
               <SelectItem value="year">This Year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="bg-white shadow-sm hover:bg-slate-50 w-full sm:w-auto" onClick={fetchFinanceData}>
+          <Button variant="outline" className="bg-card shadow-sm hover:bg-accent w-full sm:w-auto" onClick={fetchFinanceData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -321,43 +322,43 @@ const Finance = () => {
       {/* Revenue Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Cash Revenue */}
-        <Card className="bg-white shadow-lg border-0">
+        <Card className="bg-card shadow-lg border-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <DollarSign className="h-5 w-5 text-green-600" />
+              <div className="bg-green-100 dark:bg-green-900 p-2 rounded-lg">
+                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-600">Cash Revenue</p>
-                <p className="text-xl font-bold text-green-700">Rs. {overview.revenue.cash.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Cash Revenue</p>
+                <p className="text-xl font-bold text-green-700 dark:text-green-400">Rs. {overview.revenue.cash.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         {/* Credit Revenue */}
-        <Card className="bg-white shadow-lg border-0">
+        <Card className="bg-card shadow-lg border-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-indigo-100 p-2 rounded-lg">
-                <CreditCard className="h-5 w-5 text-indigo-600" />
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-lg">
+                <CreditCard className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-600">Credit Revenue</p>
-                <p className="text-xl font-bold text-indigo-700">Rs. {overview.revenue.credit.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Credit Revenue</p>
+                <p className="text-xl font-bold text-indigo-700 dark:text-indigo-400">Rs. {overview.revenue.credit.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         {/* Outstanding */}
-        <Card className="bg-white shadow-lg border-0">
+        <Card className="bg-card shadow-lg border-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-slate-100 p-2 rounded-lg">
-                <Building2 className="h-5 w-5 text-slate-600" />
+              <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
+                <Building2 className="h-5 w-5 text-slate-600 dark:text-slate-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-600">Outstanding</p>
-                <p className="text-xl font-bold text-slate-700">Rs. {overview.accountsReceivable.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Outstanding</p>
+                <p className="text-xl font-bold text-foreground">Rs. {overview.accountsReceivable.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -367,12 +368,12 @@ const Finance = () => {
       {/* Detailed Sections */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Accounts Receivable */}
-        <Card className="bg-white shadow-lg border-0">
+        <Card className="bg-card shadow-lg border-0">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Users className="h-5 w-5 text-blue-600" />
               Accounts Receivable
-              <Badge className="ml-auto bg-blue-100 text-blue-700">
+              <Badge className="ml-auto bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
                 Rs. {overview.accountsReceivable.toLocaleString()}
               </Badge>
             </CardTitle>
@@ -380,11 +381,11 @@ const Finance = () => {
           <CardContent className="p-0">
             <div className="max-h-80 overflow-y-auto">
               {receivables.map((rec) => (
-                <div key={rec.id} className="flex items-center justify-between p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                <div key={rec.id} className="flex items-center justify-between p-4 border-b border-border last:border-0 hover:bg-accent transition-colors">
                   <div className="flex-1">
-                    <div className="font-medium text-slate-900">{rec.customerName}</div>
-                    <div className="text-sm text-slate-500">Invoice {rec.invoiceNumber}</div>
-                    <div className="text-xs text-slate-400">Due: {rec.dueDate}</div>
+                    <div className="font-medium text-foreground">{rec.customerName}</div>
+                    <div className="text-sm text-muted-foreground">Invoice {rec.invoiceNumber}</div>
+                    <div className="text-xs text-muted-foreground">Due: {rec.dueDate}</div>
                     {rec.daysOverdue > 0 && (
                       <Badge variant="destructive" className="mt-1 text-xs">
                         {rec.daysOverdue} days overdue
@@ -392,8 +393,8 @@ const Finance = () => {
                     )}
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-blue-700">Rs. {rec.balance.toLocaleString()}</div>
-                    <div className="text-xs text-slate-500">Paid: Rs. {rec.paidAmount.toLocaleString()}</div>
+                    <div className="font-semibold text-blue-700 dark:text-blue-400">Rs. {rec.balance.toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">Paid: Rs. {rec.paidAmount.toLocaleString()}</div>
                   </div>
                 </div>
               ))}
@@ -401,12 +402,12 @@ const Finance = () => {
           </CardContent>
         </Card>
         {/* Accounts Payable */}
-        <Card className="bg-white shadow-lg border-0">
+        <Card className="bg-card shadow-lg border-0">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <FileText className="h-5 w-5 text-orange-600" />
               Accounts Payable
-              <Badge className="ml-auto bg-orange-100 text-orange-700">
+              <Badge className="ml-auto bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300">
                 Rs. {overview.accountsPayable.toLocaleString()}
               </Badge>
             </CardTitle>
@@ -414,16 +415,16 @@ const Finance = () => {
           <CardContent className="p-0">
             <div className="max-h-80 overflow-y-auto">
               {payables.map((pay) => (
-                <div key={pay.id} className="flex items-center justify-between p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                <div key={pay.id} className="flex items-center justify-between p-4 border-b border-border last:border-0 hover:bg-accent transition-colors">
                   <div className="flex-1">
-                    <div className="font-medium text-slate-900">{pay.supplierName}</div>
-                    {pay.contactPerson && <div className="text-sm text-slate-500">Contact: {pay.contactPerson}</div>}
+                    <div className="font-medium text-foreground">{pay.supplierName}</div>
+                    {pay.contactPerson && <div className="text-sm text-muted-foreground">Contact: {pay.contactPerson}</div>}
                     {pay.pendingOrders > 0 && (
-                      <div className="text-xs text-slate-400">{pay.pendingOrders} pending orders</div>
+                      <div className="text-xs text-muted-foreground">{pay.pendingOrders} pending orders</div>
                     )}
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-orange-700">Rs. {pay.amount.toLocaleString()}</div>
+                    <div className="font-semibold text-orange-700 dark:text-orange-400">Rs. {pay.amount.toLocaleString()}</div>
                   </div>
                 </div>
               ))}
@@ -435,12 +436,12 @@ const Finance = () => {
       {/* Bottom Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Recent Expenses */}
-        <Card className="bg-white shadow-lg border-0">
+        <Card className="bg-card shadow-lg border-0">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Receipt className="h-5 w-5 text-red-600" />
               Recent Expenses
-              <Badge className="ml-auto bg-red-100 text-red-700">
+              <Badge className="ml-auto bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
                 Rs. {overview.expenses.total.toLocaleString()}
               </Badge>
             </CardTitle>
@@ -448,16 +449,16 @@ const Finance = () => {
           <CardContent className="p-0">
             <div className="max-h-80 overflow-y-auto">
               {expenses.map((exp) => (
-                <div key={exp.id} className="p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                <div key={exp.id} className="p-4 border-b border-border last:border-0 hover:bg-accent transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="font-medium text-slate-900">{exp.description}</div>
-                      <div className="text-sm text-slate-500">{exp.category}</div>
-                      <div className="text-xs text-slate-400">
+                      <div className="font-medium text-foreground">{exp.description}</div>
+                      <div className="text-sm text-muted-foreground">{exp.category}</div>
+                      <div className="text-xs text-muted-foreground">
                         {exp.date} • {exp.paymentMethod.replace("_", " ")}
                       </div>
                     </div>
-                    <div className="font-semibold text-red-700">Rs. {exp.amount.toLocaleString()}</div>
+                    <div className="font-semibold text-red-700 dark:text-red-400">Rs. {exp.amount.toLocaleString()}</div>
                   </div>
                 </div>
               ))}
@@ -465,12 +466,12 @@ const Finance = () => {
           </CardContent>
         </Card>
         {/* Cash Flow */}
-        <Card className="bg-white shadow-lg border-0">
+        <Card className="bg-card shadow-lg border-0">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Package className="h-5 w-5 text-cyan-600" />
               Cash Flow
-              <Badge className="ml-auto bg-cyan-100 text-cyan-700">
+              <Badge className="ml-auto bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300">
                 Rs. {overview.cashFlow.net.toLocaleString()}
               </Badge>
             </CardTitle>
@@ -478,24 +479,24 @@ const Finance = () => {
           <CardContent className="p-0">
             <div className="max-h-80 overflow-y-auto">
               {cashFlow.map((cf, idx) => (
-                <div key={idx} className="p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                <div key={idx} className="p-4 border-b border-border last:border-0 hover:bg-accent transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
                       {cf.type === "inflow" ? (
-                        <div className="bg-green-100 p-1.5 rounded-full">
-                          <ArrowUp className="h-4 w-4 text-green-600" />
+                        <div className="bg-green-100 dark:bg-green-900 p-1.5 rounded-full">
+                          <ArrowUp className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </div>
                       ) : (
-                        <div className="bg-red-100 p-1.5 rounded-full">
-                          <ArrowDown className="h-4 w-4 text-red-600" />
+                        <div className="bg-red-100 dark:bg-red-900 p-1.5 rounded-full">
+                          <ArrowDown className="h-4 w-4 text-red-600 dark:text-red-400" />
                         </div>
                       )}
                       <div>
-                        <div className="font-medium text-slate-900">{cf.description}</div>
-                        <div className="text-xs text-slate-500">{cf.date}</div>
+                        <div className="font-medium text-foreground">{cf.description}</div>
+                        <div className="text-xs text-muted-foreground">{cf.date}</div>
                       </div>
                     </div>
-                    <div className={`font-semibold ${cf.type === "inflow" ? "text-green-700" : "text-red-700"}`}>
+                    <div className={`font-semibold ${cf.type === "inflow" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
                       Rs. {cf.amount.toLocaleString()}
                     </div>
                   </div>
@@ -519,7 +520,7 @@ const PaymentDialog = ({ onSubmit, onClose }: { onSubmit: (data: any) => void; o
   });
 
   return (
-    <DialogContent className="max-w-xl bg-white">
+    <DialogContent className="max-w-xl bg-card">
       <DialogHeader>
         <DialogTitle className="text-emerald-600 flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
