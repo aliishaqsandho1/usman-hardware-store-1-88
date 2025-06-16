@@ -41,17 +41,25 @@ const AccountsReceivable = () => {
       
       if (response.success) {
         setApiConnected(true);
-        // Remove duplicates based on invoice number and customer ID combination
-        const uniqueReceivables = response.data.receivables.filter((item, index, self) => 
-          index === self.findIndex((r) => 
-            r.invoiceNumber === item.invoiceNumber && 
-            r.customerId === item.customerId &&
-            r.balance > 0 // Only include items with outstanding balance
-          )
-        );
+        
+        // Enhanced deduplication: create a unique key and filter by it
+        const uniqueReceivables = response.data.receivables.filter((item, index, self) => {
+          // Create a unique identifier combining multiple fields
+          const uniqueKey = `${item.customerId}-${item.invoiceNumber}-${item.amount}-${item.balance}`;
+          
+          // Find the first occurrence of this unique combination
+          const firstIndex = self.findIndex((r) => {
+            const compareKey = `${r.customerId}-${r.invoiceNumber}-${r.amount}-${r.balance}`;
+            return compareKey === uniqueKey;
+          });
+          
+          // Only include if this is the first occurrence and has outstanding balance
+          return index === firstIndex && item.balance > 0;
+        });
         
         console.log('Original receivables:', response.data.receivables.length);
-        console.log('Unique receivables after deduplication:', uniqueReceivables.length);
+        console.log('Unique receivables after enhanced deduplication:', uniqueReceivables.length);
+        console.log('Filtered receivables:', uniqueReceivables);
         
         setReceivables(uniqueReceivables);
         setSummary(response.data.summary);
@@ -269,9 +277,9 @@ const AccountsReceivable = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 custom-scrollbar max-h-96 overflow-y-auto">
+          <div className="space-y-4 custom-scrollbar max-h-[600px] overflow-y-auto">
             {filteredReceivables.map((item) => (
-              <div key={`${item.customerId}-${item.invoiceNumber}-${item.id}`} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border">
+              <div key={`${item.customerId}-${item.invoiceNumber}-${item.id}-${item.amount}`} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border">
                 <div className="flex items-center gap-4">
                   <div>
                     <h3 className="font-medium text-slate-900">{item.customerName}</h3>
