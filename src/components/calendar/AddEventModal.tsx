@@ -82,11 +82,14 @@ export function AddEventModal({ open, onOpenChange, onEventAdded, selectedDate }
   const onSubmit = async (data: EventFormData) => {
     setIsLoading(true);
     try {
-      const eventData = {
-        ...data,
+      const eventData: Omit<CalendarEvent, 'id' | 'status'> = {
+        title: data.title,
+        description: data.description,
+        type: data.type,
         date: format(data.date, "yyyy-MM-dd"),
         time: data.time + (data.time.includes("AM") || data.time.includes("PM") ? "" : " AM"),
-        priority: data.priority as "high" | "medium" | "low",
+        customerName: data.customerName,
+        priority: data.priority,
         reminder: 30, // Default 30 minutes
       };
 
