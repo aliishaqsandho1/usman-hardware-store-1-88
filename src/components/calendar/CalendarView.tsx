@@ -36,7 +36,8 @@ export function CalendarView({ events, selectedDate, onSelectDate, onAddEvent }:
 
   const modifiersStyles = {
     hasEvents: {
-      position: 'relative' as const,
+      backgroundColor: 'hsl(var(--primary))',
+      color: 'hsl(var(--primary-foreground))',
     }
   };
 
@@ -82,44 +83,22 @@ export function CalendarView({ events, selectedDate, onSelectDate, onAddEvent }:
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
             className="rounded-md border w-full"
-            components={{
-              DayContent: ({ date, ...props }) => {
-                const eventCount = getEventCountForDate(date);
-                return (
-                  <div className="relative w-full h-full">
-                    <div {...props} />
-                    {eventCount > 0 && (
-                      <div className="absolute -top-1 -right-1 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
-                        {eventCount}
-                      </div>
-                    )}
-                  </div>
-                );
-              },
-            }}
             onDayClick={(date) => {
               onSelectDate(date);
-              // Double click to add event
-              setTimeout(() => {
-                const clickedAgain = window.confirm(`Add event for ${format(date, "PPP")}?`);
-                if (clickedAgain) {
-                  onAddEvent(date);
-                }
-              }, 300);
             }}
           />
           <div className="mt-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
                 <span>Has events</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 rounded-full"></div>
+                <div className="w-3 h-3 bg-primary/20 border-2 border-primary rounded-full"></div>
                 <span>Selected date</span>
               </div>
             </div>
-            <p className="mt-2 text-xs">Double-click on a date to quickly add an event</p>
+            <p className="mt-2 text-xs">Click on a date to view events, double-click to add an event</p>
           </div>
         </CardContent>
       </Card>
