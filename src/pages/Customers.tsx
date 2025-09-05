@@ -232,7 +232,7 @@ const Customers = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 space-y-6 min-h-screen bg-background">
+      <div className="flex-1 p-6 space-y-6 min-h-screen bg-background no-horizontal-scroll">
         <div className="flex items-center justify-center h-64">
           <div className="text-lg text-muted-foreground">Loading customers...</div>
         </div>
@@ -241,8 +241,9 @@ const Customers = () => {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6 min-h-screen bg-background">
-      <div className="flex items-center justify-between">
+    <div className="flex-1 p-6 space-y-6 min-h-screen bg-background no-horizontal-scroll">
+      {/* HEADER + ACTIONS: now stacked properly */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <div>
@@ -250,19 +251,19 @@ const Customers = () => {
             <p className="text-muted-foreground">Manage customer profiles, dues, and transactions</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           <Button 
             variant="outline" 
             onClick={handleSyncBalances}
             disabled={syncing}
-            className="bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-200"
+            className="bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-200 w-full sm:w-auto"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? 'Syncing...' : 'Sync Balances'}
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Customer
               </Button>
