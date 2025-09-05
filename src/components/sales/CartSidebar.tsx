@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ShoppingCart, User, X, Plus, Minus, UserPlus, Edit2, CreditCard, ChevronRight, ChevronLeft } from "lucide-react";
+import { ShoppingCart, User, X, Plus, Minus, UserPlus, Edit2, CreditCard } from "lucide-react";
 
 interface CartItem {
   productId: number;
@@ -27,7 +27,6 @@ interface CartSidebarProps {
   paymentMethod: string;
   isCustomerDialogOpen: boolean;
   isQuickCustomerOpen: boolean;
-  isCollapsed?: boolean;
   onSetSelectedCustomer: (customer: any) => void;
   onSetIsCustomerDialogOpen: (open: boolean) => void;
   onSetIsQuickCustomerOpen: (open: boolean) => void;
@@ -37,7 +36,6 @@ interface CartSidebarProps {
   onRemoveFromCart: (productId: number) => void;
   onCheckout: () => void;
   onUpdateItemPrice?: (productId: number, newPrice: number) => void;
-  onToggleCollapse?: () => void;
 }
 
 export const CartSidebar: React.FC<CartSidebarProps> = ({
@@ -48,7 +46,6 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   paymentMethod,
   isCustomerDialogOpen,
   isQuickCustomerOpen,
-  isCollapsed = false,
   onSetSelectedCustomer,
   onSetIsCustomerDialogOpen,
   onSetIsQuickCustomerOpen,
@@ -57,8 +54,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   onUpdateCartQuantity,
   onRemoveFromCart,
   onCheckout,
-  onUpdateItemPrice,
-  onToggleCollapse
+  onUpdateItemPrice
 }) => {
   const [priceEditingItem, setPriceEditingItem] = useState<number | null>(null);
   const [tempPrice, setTempPrice] = useState<string>("");
@@ -97,181 +93,117 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
     customer.email?.toLowerCase().includes(customerSearchTerm.toLowerCase())
   );
 
-  // Collapsed state - show only toggle button and cart count
-  if (isCollapsed) {
-    return (
-      <div className="w-14 bg-card border-l border-border shadow-lg flex flex-col h-screen fixed right-0 top-0 z-40 sm:relative">
-        <div className="p-2 border-b border-border bg-muted/50 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleCollapse}
-            className="w-full h-8 p-0 hover:bg-accent"
-            title="Expand Cart"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+  return (
+    <div className="w-72 bg-card border-l border-border shadow-lg flex flex-col h-screen">
+      {/* Customer Section */}
+      <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-medium text-card-foreground flex items-center gap-2 text-sm">
+            <User className="h-4 w-4" />
+            Customer
+          </h3>
         </div>
         
-        <div className="flex-1 flex flex-col items-center justify-center p-2">
-          <div className="relative mb-4">
-            <ShoppingCart className="h-6 w-6 text-muted-foreground" />
-            {cart.length > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs bg-blue-600">
-                {cart.length}
-              </Badge>
-            )}
-          </div>
-          
-          {cart.length > 0 && (
-            <div className="text-center">
-              <div className="text-xs font-medium text-foreground mb-1">
-                PKR {getCartTotal().toLocaleString()}
+        {selectedCustomer ? (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 p-2 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-blue-900 dark:text-blue-200 text-sm">{selectedCustomer.name}</p>
+                <p className="text-xs text-blue-700 dark:text-blue-300">{selectedCustomer.phone}</p>
               </div>
               <Button
-                onClick={onCheckout}
+                variant="ghost"
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white h-8 px-2 text-xs rotate-90 whitespace-nowrap"
-                style={{ writingMode: 'vertical-rl' }}
+                onClick={() => onSetSelectedCustomer(null)}
+                className="h-6 w-6 p-0"
               >
-                Pay
+                <X className="h-3 w-3" />
               </Button>
             </div>
-          )}
+          </div>
+        ) : (
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 p-2 rounded-lg">
+            <p className="text-xs text-green-800 dark:text-green-200 mb-2 font-medium">Cash Sale (Walk-in Customer)</p>
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSetIsCustomerDialogOpen(true)}
+                className="flex-1 text-xs h-7 bg-background"
+              >
+                Search customer...
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSetIsQuickCustomerOpen(true)}
+                className="px-2 h-7 bg-background"
+              >
+                <UserPlus className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Payment Method Selection */}
+      <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
+        <div className="space-y-2">
+          <Label className="text-xs font-medium text-card-foreground flex items-center gap-2">
+            <CreditCard className="h-3 w-3" />
+            Payment Method
+          </Label>
+          <Select value={paymentMethod} onValueChange={onSetPaymentMethod}>
+            <SelectTrigger className="h-8 text-xs bg-background border-input">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cash">Cash</SelectItem>
+              <SelectItem value="credit">Credit</SelectItem>
+              <SelectItem value="card">Card</SelectItem>
+              <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div
-      className="w-64 bg-card border-l border-border shadow-lg flex flex-col h-screen
-      fixed right-0 top-0 z-40
-      max-w-full
-      sm:relative sm:w-64 sm:max-w-xs"
-      style={{
-        width: '100vw',
-        maxWidth: 320,
-      }}
-    >
+      {/* Order Status Selection */}
+      <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
+        <div className="space-y-2">
+          <Label className="text-xs font-medium text-card-foreground">Order Status</Label>
+          <Select value={orderStatus} onValueChange={onSetOrderStatus}>
+            <SelectTrigger className="h-8 text-xs bg-background border-input">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Cart Section - SCROLLABLE AREA */}
       <div className="flex-1 min-h-0 flex flex-col bg-card">
-        {/* Toggle Button */}
-        <div className="p-2 border-b border-border bg-muted/50 flex-shrink-0 flex justify-between items-center">
-          <h3 className="font-medium text-card-foreground text-sm">Cart ({cart.length})</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleCollapse}
-            className="h-6 w-6 p-0 hover:bg-accent"
-            title="Collapse Cart"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </Button>
+        <div className="p-3 border-b border-border flex-shrink-0">
+          <h3 className="font-medium text-card-foreground flex items-center gap-2 text-sm">
+            <ShoppingCart className="h-4 w-4" />
+            Cart ({cart.length})
+          </h3>
         </div>
 
-        {/* Customer, Payment, Order Status */}
-        <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium text-card-foreground flex items-center gap-2 text-sm">
-              <User className="h-4 w-4" />
-              Customer
-            </h3>
-          </div>
-          
-          {selectedCustomer ? (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 p-2 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-blue-900 dark:text-blue-200 text-sm">{selectedCustomer.name}</p>
-                  <p className="text-xs text-blue-700 dark:text-blue-300">{selectedCustomer.phone}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onSetSelectedCustomer(null)}
-                  className="h-6 w-6 p-0"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
+        {cart.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center py-8">
+              <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm">Cart is empty</p>
             </div>
-          ) : (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 p-2 rounded-lg">
-              <p className="text-xs text-green-800 dark:text-green-200 mb-2 font-medium">Cash Sale (Walk-in Customer)</p>
-              <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onSetIsCustomerDialogOpen(true)}
-                  className="flex-1 text-xs h-7 bg-background"
-                >
-                  Search customer...
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onSetIsQuickCustomerOpen(true)}
-                  className="px-2 h-7 bg-background"
-                >
-                  <UserPlus className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-card-foreground flex items-center gap-2">
-              <CreditCard className="h-3 w-3" />
-              Payment Method
-            </Label>
-            <Select value={paymentMethod} onValueChange={onSetPaymentMethod}>
-              <SelectTrigger className="h-8 text-xs bg-background border-input">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="credit">Credit</SelectItem>
-                <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
-        </div>
-        <div className="p-3 border-b border-border bg-muted/50 flex-shrink-0">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-card-foreground">Order Status</Label>
-            <Select value={orderStatus} onValueChange={onSetOrderStatus}>
-              <SelectTrigger className="h-8 text-xs bg-background border-input">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Cart Section - SCROLLABLE AREA */}
-        <div className="flex-1 min-h-0 flex flex-col bg-card custom-scrollbar overflow-y-auto max-h-[44vh] sm:max-h-full">
-          <div className="p-3 border-b border-border flex-shrink-0 sticky top-0 z-20 bg-card">
-            <h3 className="font-medium text-card-foreground flex items-center gap-2 text-sm">
-              <ShoppingCart className="h-4 w-4" />
-              Items ({cart.length})
-            </h3>
-          </div>
-          <div className="space-y-2 pb-4 px-3">
-            {cart.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center py-8">
-                  <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">Cart is empty</p>
-                </div>
-              </div>
-            ) : (
-              cart.map((item) => (
+        ) : (
+          <div className="flex-1 overflow-y-auto p-3">
+            <div className="space-y-2 pb-4">
+              {cart.map((item) => (
                 <div key={item.productId} className="bg-muted/50 border border-border p-2 rounded-lg">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
@@ -353,7 +285,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                       >
                         <Minus className="h-3 w-3" />
                       </Button>
-                      <span className="w-14 text-center text-xs font-medium text-card-foreground">{item.quantity} {item.unit}</span>
+                      <span className="w-16 text-center text-xs font-medium text-card-foreground">{item.quantity} {item.unit}</span>
                       <Button
                         variant="outline"
                         size="sm"
@@ -368,15 +300,15 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                     </p>
                   </div>
                 </div>
-              ))
-            )}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* FIXED CHECKOUT SECTION - ALWAYS VISIBLE */}
       {cart.length > 0 && (
-        <div className="p-3 border-t border-border bg-card flex-shrink-0 sticky bottom-0 z-50 w-full">
+        <div className="p-3 border-t border-border bg-card flex-shrink-0">
           <div className="space-y-2 mb-3">
             <div className="border-t border-border pt-2">
               <div className="flex justify-between font-bold">

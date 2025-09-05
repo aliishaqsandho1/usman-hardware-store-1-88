@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, CheckCircle, AlertTriangle, Info, Clock, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { notificationsApi, NotificationData } from "@/services/notificationsApi";
+import { notificationsApi } from "@/services/api";
 
 interface NotificationsModalProps {
   open: boolean;
@@ -15,7 +16,7 @@ interface NotificationsModalProps {
 
 export function NotificationsModal({ open, onOpenChange }: NotificationsModalProps) {
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState<NotificationData[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
@@ -30,40 +31,8 @@ export function NotificationsModal({ open, onOpenChange }: NotificationsModalPro
       setLoading(true);
       const response = await notificationsApi.getAll({ limit: 50 });
       
-      if (response.success && response.data) {
-        // Handle both possible response structures
-        const notificationsData = Array.isArray(response.data) 
-          ? response.data 
-          : response.data.notifications || [];
-        setNotifications(notificationsData);
-      } else {
-        // Use fallback notifications for demo
-        setNotifications([
-          {
-            id: 1,
-            type: "low_stock",
-            title: "Low Stock Alert",
-            message: "Heavy Duty Hinges stock is running low (5 remaining)",
-            read: false,
-            createdAt: "2024-11-28T10:00:00Z"
-          },
-          {
-            id: 2,
-            type: "overdue_payment",
-            title: "Payment Overdue",
-            message: "Ahmad Furniture has an overdue payment of Rs. 15,000",
-            read: false,
-            createdAt: "2024-11-28T09:00:00Z"
-          },
-          {
-            id: 3,
-            type: "new_order",
-            title: "New Order Received",
-            message: "Hassan Carpentry placed a new order worth Rs. 8,500",
-            read: true,
-            createdAt: "2024-11-28T08:00:00Z"
-          }
-        ]);
+      if (response.success) {
+        setNotifications(response.data.notifications || response.data || []);
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -273,7 +242,7 @@ function NotificationItem({
   getBgColor, 
   formatTime 
 }: {
-  notification: NotificationData;
+  notification: any;
   onMarkAsRead: (id: number) => void;
   getIcon: (type: string) => JSX.Element;
   getBgColor: (type: string, read: boolean) => string;

@@ -54,76 +54,17 @@ const apiRequest = async <T>(
     return data;
   } catch (error) {
     console.error('Backup API request failed:', error);
-    // Return mock data for demo purposes
     throw error;
   }
 };
 
 export const backupApi = {
-  getStatus: async (): Promise<BackupStatusResponse> => {
-    try {
-      return await apiRequest<BackupStatusResponse>('/backup/status');
-    } catch (error) {
-      // Return fallback data when API is not available
-      return {
-        success: true,
-        data: {
-          lastBackup: new Date().toISOString(),
-          backupSize: "2.5 GB",
-          storageUsed: "8.7 GB",
-          storageLimit: "50 GB",
-          autoBackupEnabled: true,
-          syncStatus: "up_to_date",
-          lastSync: new Date().toISOString()
-        }
-      };
-    }
-  },
+  getStatus: () => apiRequest<BackupStatusResponse>('/backup/status'),
   
-  createBackup: async () => {
-    try {
-      return await apiRequest<{ success: boolean; data: { backupId: string; status: string; estimatedTime: string }; message: string }>('/backup/create', {
-        method: 'POST',
-      });
-    } catch (error) {
-      return {
-        success: true,
-        data: {
-          backupId: 'backup-' + Date.now(),
-          status: 'initiated',
-          estimatedTime: '5 minutes'
-        },
-        message: 'Backup started successfully'
-      };
-    }
-  },
+  createBackup: () =>
+    apiRequest<{ success: boolean; data: { backupId: string; status: string; estimatedTime: string }; message: string }>('/backup/create', {
+      method: 'POST',
+    }),
   
-  getHistory: async (): Promise<BackupHistoryResponse> => {
-    try {
-      return await apiRequest<BackupHistoryResponse>('/backup/history');
-    } catch (error) {
-      // Return fallback data when API is not available
-      return {
-        success: true,
-        data: {
-          backups: [
-            {
-              id: '1',
-              date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-              size: '2.5 GB',
-              status: 'completed',
-              type: 'automatic'
-            },
-            {
-              id: '2',
-              date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-              size: '2.3 GB',
-              status: 'completed',
-              type: 'manual'
-            }
-          ]
-        }
-      };
-    }
-  },
+  getHistory: () => apiRequest<BackupHistoryResponse>('/backup/history'),
 };

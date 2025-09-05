@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,7 @@ import Suppliers from "./pages/Suppliers";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import Quotations from "./pages/Quotations";
 import ExpenseTracking from "./pages/ExpenseTracking";
+import SalesAnalytics from "./pages/SalesAnalytics";
 import CustomerInsights from "./pages/CustomerInsights";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
@@ -53,6 +55,7 @@ const App = () => (
                     <Route path="/purchase-orders" element={<PurchaseOrders />} />
                     <Route path="/quotations" element={<Quotations />} />
                     <Route path="/expense-tracking" element={<ExpenseTracking />} />
+                    <Route path="/sales-analytics" element={<SalesAnalytics />} />
                     <Route path="/customer-insights" element={<CustomerInsights />} />
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/settings" element={<Settings />} />

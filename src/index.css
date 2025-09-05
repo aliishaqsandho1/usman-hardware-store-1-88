@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -207,25 +208,5 @@
 
   .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
-  }
-
-  /** 
-   * Responsive overflow utility to prevent horizontal scroll on mobile.
-   * Use `.no-horizontal-scroll` on root containers as needed.
-   */
-  .no-horizontal-scroll {
-    overflow-x: hidden !important;
-    overscroll-behavior-x: contain;
-    max-width: 100vw;
-  }
-
-  /* Utility: sticky bottom section for cart overlays */
-  .sticky-bottom {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    background: inherit;
   }
 }

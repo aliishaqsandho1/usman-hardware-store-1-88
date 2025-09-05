@@ -49,7 +49,6 @@ const Sales = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isCartCollapsed, setIsCartCollapsed] = useState(false);
 
   // Fullscreen toggle function
   const toggleFullscreen = () => {
@@ -896,7 +895,7 @@ const Sales = () => {
         </div>
       </div>
 
-      {/* Desktop Cart Sidebar - Now Toggleable */}
+      {/* Desktop Cart Sidebar */}
       <div className={`${isMobile ? 'hidden' : ''} flex-shrink-0`}>
         <CartSidebar
           cart={cart}
@@ -906,7 +905,6 @@ const Sales = () => {
           paymentMethod={paymentMethod}
           isCustomerDialogOpen={isCustomerDialogOpen}
           isQuickCustomerOpen={isQuickCustomerOpen}
-          isCollapsed={isCartCollapsed}
           onSetSelectedCustomer={setSelectedCustomer}
           onSetIsCustomerDialogOpen={setIsCustomerDialogOpen}
           onSetIsQuickCustomerOpen={setIsQuickCustomerOpen}
@@ -916,7 +914,6 @@ const Sales = () => {
           onRemoveFromCart={removeFromCart}
           onCheckout={handleCheckout}
           onUpdateItemPrice={updateItemPrice}
-          onToggleCollapse={() => setIsCartCollapsed(!isCartCollapsed)}
         />
       </div>
 
@@ -924,8 +921,8 @@ const Sales = () => {
       {isMobile && isCartOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setIsCartOpen(false)} />
-          <div className="fixed right-0 top-0 h-full w-80 max-w-[90vw] bg-background shadow-lg flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
+          <div className="fixed right-0 top-0 h-full w-80 max-w-[90vw] bg-background shadow-lg">
+            <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold">Cart ({cart.length})</h2>
               <Button
                 variant="ghost"
@@ -938,82 +935,85 @@ const Sales = () => {
             </div>
             
             {/* Mobile Cart Content */}
-            <div className="flex-1 overflow-auto p-4">
-              {cart.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  <Package className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                  <p>No items in cart</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {cart.map((item) => (
-                    <Card key={item.productId} className="p-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-sm">{item.name}</h4>
-                          <p className="text-xs text-muted-foreground">{item.sku}</p>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-6 w-6 p-0 text-red-500"
-                          onClick={() => removeFromCart(item.productId)}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+            <div className="flex flex-col h-full">
+              {/* Mobile Cart Items */}
+              <div className="flex-1 overflow-auto p-4">
+                {cart.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Package className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                    <p>No items in cart</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {cart.map((item) => (
+                      <Card key={item.productId} className="p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-sm">{item.name}</h4>
+                            <p className="text-xs text-muted-foreground">{item.sku}</p>
+                          </div>
                           <Button 
                             size="sm" 
-                            variant="outline" 
-                            className="h-6 w-6 p-0"
-                            onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}
+                            variant="ghost" 
+                            className="h-6 w-6 p-0 text-red-500"
+                            onClick={() => removeFromCart(item.productId)}
                           >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="text-sm font-medium">{item.quantity} {item.unit}</span>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-6 w-6 p-0"
-                            onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
-                          >
-                            <Plus className="h-3 w-3" />
+                            ×
                           </Button>
                         </div>
-                        <span className="font-bold text-green-600 text-sm">
-                          PKR {(item.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
-                    </Card>
-                  ))}
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-6 w-6 p-0"
+                              onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="text-sm font-medium">{item.quantity} {item.unit}</span>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-6 w-6 p-0"
+                              onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <span className="font-bold text-green-600 text-sm">
+                            PKR {(item.price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Checkout */}
+              {cart.length > 0 && (
+                <div className="p-4 border-t bg-background">
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total:</span>
+                      <span className="text-green-600">PKR {totalCartValue.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => {
+                      handleCheckout();
+                      setIsCartOpen(false);
+                    }}
+                  >
+                    Complete Sale ({paymentMethod})
+                  </Button>
                 </div>
               )}
             </div>
-            
-            {/* Mobile Checkout: sticky always visible at the bottom */}
-            {cart.length > 0 && (
-              <div className="border-t bg-background sticky bottom-0 left-0 right-0 w-full p-4 z-10">
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total:</span>
-                    <span className="text-green-600">PKR {totalCartValue.toFixed(2)}</span>
-                  </div>
-                </div>
-                
-                <Button 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => {
-                    handleCheckout();
-                    setIsCartOpen(false);
-                  }}
-                >
-                  Complete Sale ({paymentMethod})
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       )}

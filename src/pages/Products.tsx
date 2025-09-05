@@ -497,7 +497,7 @@ const Products = () => {
 
   if (loading && products.length === 0) {
     return (
-      <div className="flex-1 p-6 space-y-6 min-h-screen bg-background no-horizontal-scroll">
+      <div className="flex-1 p-6 space-y-6 min-h-screen bg-background">
         <div className="flex items-center justify-center h-64">
           <div className="text-lg text-muted-foreground">Loading products...</div>
         </div>
@@ -506,9 +506,8 @@ const Products = () => {
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6 min-h-screen bg-background no-horizontal-scroll">
-      {/* HEADER AND BUTTONS: now stacked on small screens */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="flex-1 p-6 space-y-6 min-h-screen bg-background">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <div>
@@ -516,11 +515,10 @@ const Products = () => {
             <p className="text-muted-foreground">Manage your inventory and product catalog</p>
           </div>
         </div>
-        {/* The button group now stacks on sm, stays in-header on md+ */}
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+        <div className="flex gap-2">
           <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
+              <Button variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Category
               </Button>
@@ -551,7 +549,7 @@ const Products = () => {
             variant="outline" 
             onClick={handlePdfExportClick}
             disabled={exportLoading}
-            className="bg-red-600 hover:bg-red-700 text-white border-red-600 w-full sm:w-auto"
+            className="bg-red-600 hover:bg-red-700 text-white border-red-600"
           >
             {exportLoading ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -563,7 +561,7 @@ const Products = () => {
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </Button>
